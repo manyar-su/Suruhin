@@ -1,20 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  ArrowLeft, MapPin, CheckCircle, ShieldAlert, Navigation, 
-  HelpCircle, Star, Phone, MessageSquare, AlertTriangle, KeyRound, 
-  Hourglass, Users, Info, Settings, ShieldCheck, Zap, X 
-} from 'lucide-react';
-import { 
-  getBookings, saveBookings, addStatusHistory, getStatusHistory, 
-  getMeetingVerification, saveMeetingVerification, createIncident, 
-  addNotification, getSystemConfig, saveClientBalance, getClientBalance 
+import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, CheckCircle, MessageSquare, X } from 'lucide-react';
+import {
+  addNotification,
+  addStatusHistory,
+  createIncident,
+  getBookings,
+  getMeetingVerification,
+  saveBookings,
 } from '../data/mockExtensionData';
-import { Booking, BookingStatus, MeetingType, TrackingMode } from '../types';
-import { formatCurrency } from '../lib/formatCurrency';
-
-// Tracking Components
+import { Booking, BookingStatus, Talent } from '../types';
 import { LiveTrackingMap } from '../components/tracking/LiveTrackingMap';
-import { TrackingStatusCard } from '../components/tracking/TrackingStatusCard';
 import { ArrivalEstimate } from '../components/tracking/ArrivalEstimate';
 import { LocationPermissionModal } from '../components/tracking/LocationPermissionModal';
 import { LocationAccuracyWarning } from '../components/tracking/LocationAccuracyWarning';
@@ -23,69 +18,63 @@ import { ArrivalConfirmation } from '../components/tracking/ArrivalConfirmation'
 import { MeetingPinVerification } from '../components/tracking/MeetingPinVerification';
 import { ServiceTimer } from '../components/tracking/ServiceTimer';
 import { EmergencyButton } from '../components/tracking/EmergencyButton';
-import { LostConnectionNotice } from '../components/tracking/LostConnectionNotice';
 import { TrackingPrivacyNotice } from '../components/tracking/TrackingPrivacyNotice';
+import { useBookingChat } from '../hooks/useBookingChat';
+import { formatCurrency } from '../lib/formatCurrency';
 
 interface PesananTrackingPageProps {
   bookingId: string;
-  subPage?: string; // 'detail' | 'tracking' | 'verifikasi' | 'selesai'
+  subPage?: string;
   navigate: (path: string) => void;
+  currentUser?: Talent | null;
 }
 
-export function PesananTrackingPage({ bookingId, subPage = 'detail', navigate }: PesananTrackingPageProps) {
-  // Load current booking from simulated DB
-  const [bookings, setBookings] = useState<Booking[]>(() => getBookings());
-  const booking = useMemo(() => {
-    return bookings.find(b => b.id === bookingId) || bookings[0];
-  }, [bookings, bookingId]);
-
-  // Current active simulation role: 'customer' or 'talent' to allow testing the two-way workflows
-  const [activeRole, setActiveRole] = useState<'customer' | 'talent'>('customer');
-
-  // GPS Accuracy & Signal Fallback simulations
-  const [gpsAccuracy, setGpsAccuracy] = useState(15); // in meters
+export function PesananTrackingPage({
+  bookingId,
+  subPage = 'detail',
+  navigate,
+  currentUser,
+}: PesananTrackingPageProps) {
+  const [bookings, setBookings] = useState<Booking[]>(() => getBookings(currentUser?.id));
+  const booking = useMemo(() => bookings.find((item) => item.id === bookingId) || bookings[0], [bookings, bookingId]);
+  const [gpsAccuracy, setGpsAccuracy] = useState(15);
   const [gpsStatus, setGpsStatus] = useState<'connected' | 'searching' | 'error'>('connected');
-  const [lostSync, setLostSync] = useState(false);
+  const [showPermissions, setShowPermissions] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [successToast, setSuccessToast] = useState('');
+  const [newMessage, setNewMessage] = useState('');
 
-  // Simulated GPS position of the talent
+  const talentDisplayName = currentUser?.name || 'Rizky Pratama';
   const meetingLat = booking?.meetingLatitude ?? null;
   const meetingLon = booking?.meetingLongitude ?? null;
+  const meetingPointReady = meetingLat !== null && meetingLon !== null;
   const startLat = meetingLat !== null ? meetingLat - 0.015 : null;
   const startLon = meetingLon !== null ? meetingLon - 0.012 : null;
-  const meetingPointReady = meetingLat !== null && meetingLon !== null;
 
   const [talentLat, setTalentLat] = useState<number | null>(startLat);
   const [talentLon, setTalentLon] = useState<number | null>(startLon);
-  const [travelProgress, setTravelProgress] = useState(0); // 0 to 100%
+  const [travelProgress, setTravelProgress] = useState(0);
 
-  // Simulated Chat Box Modal state
-  const [showChatModal, setShowChatModal] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ sender: 'customer' | 'talent'; text: string; time: string }[]>([
-    { sender: 'talent', text: 'Halo kak, saya sedang menyiapkan perlengkapan untuk pesanan Kakak.', time: '08:05' }
-  ]);
-  const [newMsg, setNewMsg] = useState('');
-
-  // Location Permissions States
-  const [showPermissions, setShowPermissions] = useState(false);
-  const [permissionsGranted, setPermissionsGranted] = useState<'always' | 'once' | 'deny' | null>(null);
-
-  // Success feedbacks
-  const [successToast, setSuccessToast] = useState('');
-
-  // PIN code verification for meeting start
   const verification = useMemo(() => {
-    if (!booking) return null;
+    if (!booking) {
+      return null;
+    }
     return getMeetingVerification(booking.id);
   }, [booking]);
 
-  // Calculate distance & ETA based on current coordinates
-  const calculateSimulatedDistance = () => {
+  const bookingChat = useBookingChat({
+    bookingId: booking?.id || bookingId,
+    senderId: currentUser?.id || booking?.talentId || null,
+    senderName: talentDisplayName,
+    senderRole: 'talent',
+  });
+
+  const distanceKm = useMemo(() => {
     if (meetingLat === null || meetingLon === null || talentLat === null || talentLon === null) {
       return 0;
     }
 
-    // Distance in KM
-    const R = 6371;
+    const earthRadiusKm = 6371;
     const dLat = (meetingLat - talentLat) * (Math.PI / 180);
     const dLon = (meetingLon - talentLon) * (Math.PI / 180);
     const a =
@@ -94,141 +83,119 @@ export function PesananTrackingPage({ bookingId, subPage = 'detail', navigate }:
         Math.cos(meetingLat * (Math.PI / 180)) *
         Math.sin(dLon / 2) *
         Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
 
-  const distanceKm = useMemo(() => {
-    return calculateSimulatedDistance();
-  }, [talentLat, talentLon, meetingLat, meetingLon]);
+    return earthRadiusKm * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  }, [meetingLat, meetingLon, talentLat, talentLon]);
 
-  const etaMinutes = useMemo(() => {
-    // Assumes average speed is 30km/h
-    return Math.max(1, Math.ceil((distanceKm / 30) * 60));
-  }, [distanceKm]);
+  const etaMinutes = useMemo(() => Math.max(1, Math.ceil((distanceKm / 30) * 60)), [distanceKm]);
 
-  // Simulated continuous GPS travel loop
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    if (!meetingPointReady || startLat === null || startLon === null) {
+    if (!meetingPointReady || startLat === null || startLon === null || !booking) {
       return;
     }
-    
-    if (booking?.status === 'TALENT_ON_THE_WAY') {
-      interval = setInterval(() => {
-        setTravelProgress(prev => {
-          const next = prev + 4; // increment 4% progress every 3 seconds
-          if (next >= 100) {
-            clearInterval(interval!);
-            
-            // Auto transition to TALENT_ARRIVED or let user click Saya Sudah Tiba
-            updateStatus('TALENT_ARRIVED', 'Talent Rizky Pratama telah sampai di lokasi pertemuan.');
-            return 100;
-          }
-          
-          // Move GPS coordinates linearly closer to meeting point
-          const ratio = next / 100;
-          const currentLat = startLat + (meetingLat - startLat) * ratio;
-          const currentLon = startLon + (meetingLon - startLon) * ratio;
-          setTalentLat(currentLat);
-          setTalentLon(currentLon);
 
-          // If close enough (say 300 meters, or ratio > 85%), trigger TALENT_NEARBY status
-          if (next >= 85 && booking.status !== 'TALENT_NEARBY') {
-            updateStatus('TALENT_NEARBY', 'Rizky Pratama sudah mendekati lokasi Anda (jarak < 300m).');
-          }
+    if (booking.status === 'PAID' || booking.status === 'TALENT_ACCEPTED' || booking.status === 'TALENT_PREPARING') {
+      setTalentLat(startLat);
+      setTalentLon(startLon);
+      setTravelProgress(0);
+      return;
+    }
 
-          return next;
-        });
-      }, 3000);
-    } else if (booking?.status === 'TALENT_ARRIVED') {
-      // Keep talent lock at meeting point
+    if (booking.status === 'TALENT_ARRIVED') {
       setTalentLat(meetingLat);
       setTalentLon(meetingLon);
       setTravelProgress(100);
     }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [booking?.status, meetingLat, meetingLon, meetingPointReady, startLat, startLon]);
+  }, [booking, meetingLat, meetingLon, meetingPointReady, startLat, startLon]);
 
   useEffect(() => {
-    if (!meetingPointReady || startLat === null || startLon === null) {
+    if (!booking || booking.status !== 'TALENT_ON_THE_WAY' || !meetingPointReady || startLat === null || startLon === null) {
       return;
     }
 
-    if (booking?.status === 'PAID' || booking?.status === 'TALENT_ACCEPTED' || booking?.status === 'TALENT_PREPARING') {
-      setTalentLat(startLat);
-      setTalentLon(startLon);
-      setTravelProgress(0);
-    }
-  }, [booking?.status, meetingPointReady, startLat, startLon]);
+    const interval = window.setInterval(() => {
+      setTravelProgress((previous) => {
+        const next = Math.min(previous + 4, 100);
+        const ratio = next / 100;
 
-  // Update Status state & add status history
+        setTalentLat(startLat + (meetingLat - startLat) * ratio);
+        setTalentLon(startLon + (meetingLon - startLon) * ratio);
+
+        if (next >= 85 && booking.status !== 'TALENT_NEARBY') {
+          updateStatus('TALENT_NEARBY', `${talentDisplayName} sudah mendekati lokasi pelanggan.`);
+        }
+
+        if (next >= 100) {
+          window.clearInterval(interval);
+          updateStatus('TALENT_ARRIVED', `${talentDisplayName} telah sampai di lokasi pertemuan.`);
+        }
+
+        return next;
+      });
+    }, 3000);
+
+    return () => window.clearInterval(interval);
+  }, [booking, meetingLat, meetingLon, meetingPointReady, startLat, startLon, talentDisplayName]);
+
   const updateStatus = (newStatus: BookingStatus, notesText?: string) => {
-    if (!booking) return;
+    if (!booking) {
+      return;
+    }
 
     const previousStatus = booking.status;
-    const list = getBookings();
-    const idx = list.findIndex(b => b.id === booking.id);
-    
-      if (idx > -1) {
-        list[idx].status = newStatus;
-      
-        // Update timestamps based on transition milestones
-        if (newStatus === 'TALENT_ON_THE_WAY') {
-          list[idx].talentStartedJourneyAt = new Date().toISOString();
-          list[idx].trackingStartedAt = new Date().toISOString();
-          addNotification(
-            'Talent Mulai Perjalanan',
-            `Rizky Pratama sedang dalam perjalanan menuju lokasi Anda. Estimasi tiba: ${etaMinutes} menit.`,
-          'info'
-        );
-      } else if (newStatus === 'TALENT_ARRIVED') {
-        list[idx].talentArrivedAt = new Date().toISOString();
-        addNotification(
-          'Talent Sudah Tiba!',
-          'Talent sudah sampai di titik pertemuan. Silakan temui talent dan verifikasi menggunakan PIN.',
-          'approved'
-        );
-      } else if (newStatus === 'SERVICE_ACTIVE') {
-        list[idx].actualStartTime = new Date().toISOString();
-        list[idx].actualDurationMinutes = booking.duration * 60;
-        addNotification(
-          'Layanan Dimulai!',
-          'Pertemuan terverifikasi sukses. Selamat beraktivitas, timer layanan kini aktif.',
-          'completed'
-        );
-      } else if (newStatus === 'COMPLETED') {
-        list[idx].actualEndTime = new Date().toISOString();
-        list[idx].trackingStoppedAt = new Date().toISOString();
-        addNotification(
-          'Layanan Selesai Sempurna',
-          'Dana escrow telah dilepaskan ke saldo talent. Terima kasih atas pesanan Anda!',
-          'completed'
-        );
-      } else if (newStatus === 'CANCELLED') {
-        list[idx].trackingStoppedAt = new Date().toISOString();
-      }
+    const nextBookings = getBookings(currentUser?.id);
+    const targetIndex = nextBookings.findIndex((item) => item.id === booking.id);
 
-      saveBookings(list);
-      setBookings(list);
-
-      // Add audit history log
-      addStatusHistory(booking.id, previousStatus, newStatus, activeRole, talentLat ?? undefined, talentLon ?? undefined, notesText);
-
-      setSuccessToast(`Status pesanan diperbarui menjadi: ${newStatus.replace(/_/g, ' ')}`);
-      setTimeout(() => setSuccessToast(''), 3000);
+    if (targetIndex === -1) {
+      return;
     }
+
+    nextBookings[targetIndex].status = newStatus;
+
+    if (newStatus === 'TALENT_ON_THE_WAY') {
+      nextBookings[targetIndex].talentStartedJourneyAt = new Date().toISOString();
+      nextBookings[targetIndex].trackingStartedAt = new Date().toISOString();
+      addNotification(
+        'Talent Mulai Perjalanan',
+        `${talentDisplayName} sedang menuju titik temu. Estimasi tiba ${etaMinutes} menit.`,
+        'info'
+      );
+    } else if (newStatus === 'TALENT_ARRIVED') {
+      nextBookings[targetIndex].talentArrivedAt = new Date().toISOString();
+      addNotification(
+        'Talent Sudah Tiba',
+        'Talent telah berada di lokasi. Silakan lanjutkan verifikasi PIN untuk memulai layanan.',
+        'approved'
+      );
+    } else if (newStatus === 'SERVICE_ACTIVE') {
+      nextBookings[targetIndex].actualStartTime = new Date().toISOString();
+      nextBookings[targetIndex].actualDurationMinutes = booking.duration * 60;
+      addNotification('Layanan Dimulai', 'Pertemuan berhasil diverifikasi dan waktu layanan mulai dihitung.', 'completed');
+    } else if (newStatus === 'COMPLETED') {
+      nextBookings[targetIndex].actualEndTime = new Date().toISOString();
+      nextBookings[targetIndex].trackingStoppedAt = new Date().toISOString();
+      addNotification('Layanan Selesai', 'Pesanan berhasil ditutup dan tracking dihentikan.', 'completed');
+    } else if (newStatus === 'CANCELLED') {
+      nextBookings[targetIndex].trackingStoppedAt = new Date().toISOString();
+    }
+
+    saveBookings(nextBookings);
+    setBookings(nextBookings);
+    addStatusHistory(booking.id, previousStatus, newStatus, currentUser?.id || 'talent', talentLat ?? undefined, talentLon ?? undefined, notesText);
+    setSuccessToast(`Status pesanan berubah ke ${newStatus.replace(/_/g, ' ')}`);
+    window.setTimeout(() => setSuccessToast(''), 2800);
   };
 
   const handleMeetingPointChange = (point: { latitude: number; longitude: number; address?: string }) => {
-    if (!booking) return;
+    if (!booking) {
+      return;
+    }
 
-    const nextBookings = getBookings();
+    const nextBookings = getBookings(currentUser?.id);
     const targetIndex = nextBookings.findIndex((item) => item.id === booking.id);
-    if (targetIndex === -1) return;
+    if (targetIndex === -1) {
+      return;
+    }
 
     nextBookings[targetIndex] = {
       ...nextBookings[targetIndex],
@@ -249,490 +216,327 @@ export function PesananTrackingPage({ bookingId, subPage = 'detail', navigate }:
     }
   };
 
-  // Chat message send handler
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMsg.trim()) return;
-
-    const timestamp = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-    setChatMessages(prev => [...prev, { sender: activeRole, text: newMsg.trim(), time: timestamp }]);
-    setNewMsg('');
-
-    // Simulate quick auto response from the other party after 2 seconds
-    setTimeout(() => {
-      setChatMessages(prev => [
-        ...prev,
-        { 
-          sender: activeRole === 'customer' ? 'talent' : 'customer', 
-          text: activeRole === 'customer' ? 'Baik kak, saya monitor posisi lewat peta terus ya.' : 'Oke siap mas, hati-hati di jalan ya!', 
-          time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) 
-        }
-      ]);
-    }, 2000);
-  };
-
-  // SOS Incident handler
-  const handleRaiseSOS = (type: string, description: string) => {
-    createIncident(booking.id, activeRole, type, description, talentLat, talentLon);
-    addNotification(
-      '⚠️ ALERT DARURAT SOS AKTIF',
-      `Laporan SOS diajukan oleh ${activeRole} terkait: ${type}. Pengawasan aktif dimulai.`,
-      'time_alert'
-    );
-  };
-
-  // PIN Verification handler
-  const handlePINVerification = async (enteredPin: string): Promise<boolean> => {
-    if (verification && verification.pinRaw === enteredPin) {
-      // Successful match
-      updateStatus('SERVICE_ACTIVE', 'Pertemuan berhasil terverifikasi via input PIN keamanan 6-digit.');
-      return true;
+  const handleSendMessage = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const sent = await bookingChat.sendMessage(newMessage);
+    if (sent) {
+      setNewMessage('');
     }
-    return false;
   };
+
+  const handleRaiseSOS = (type: string, description: string) => {
+    if (!booking) {
+      return;
+    }
+
+    createIncident(booking.id, currentUser?.id || 'talent', type, description, talentLat ?? undefined, talentLon ?? undefined);
+    addNotification('Alert Darurat Aktif', `Laporan darurat dikirim untuk kategori ${type}.`, 'time_alert');
+  };
+
+  const handlePinVerification = async (enteredPin: string) => {
+    if (verification?.pinRaw !== enteredPin) {
+      return false;
+    }
+
+    updateStatus('SERVICE_ACTIVE', 'Pertemuan berhasil diverifikasi via PIN keamanan.');
+    return true;
+  };
+
+  if (!booking) {
+    return (
+      <div className="py-28 text-center">
+        <h2 className="text-2xl font-black text-[#082B5C]">Pesanan tidak ditemukan</h2>
+      </div>
+    );
+  }
 
   return (
-    <div className="py-24 bg-slate-50/50 min-h-screen">
-      <div className="max-w-4xl mx-auto px-4 space-y-6">
-        
-        {/* SUCCESS TOAST FLOATING BANNER */}
+    <div className="min-h-screen bg-slate-50/50 py-24">
+      <div className="mx-auto max-w-5xl space-y-6 px-4">
         {successToast && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#082B5C] border border-blue-900/10 text-white px-5 py-3 rounded-2xl shadow-xl z-50 text-xs font-black flex items-center gap-2 animate-bounce">
+          <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-[#082B5C] px-5 py-3 text-xs font-black text-white shadow-xl">
             <CheckCircle size={16} className="text-emerald-400" />
             <span>{successToast}</span>
           </div>
         )}
 
-        {/* ROLE SIMULATION TUNER DRAWER */}
-        <div className="bg-[#082B5C] text-white p-4 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg border border-slate-700/10">
-          <div className="flex items-center gap-2.5 text-left">
-            <div className="p-2 bg-orange-500 rounded-xl">
-              <Zap size={18} className="text-white animate-pulse" />
-            </div>
-            <div>
-              <h3 className="text-xs font-black uppercase tracking-wider text-orange-400">
-                Alur Kerja & Simulator Peran Dua Arah
-              </h3>
-              <p className="text-[10px] text-slate-300 font-semibold mt-0.5">
-                Gunakan panel di samping untuk beralih antara melihat sebagai Pelanggan atau Mitra Talent untuk menguji seluruh alur tracking.
-              </p>
-            </div>
+        <div className="flex flex-col gap-4 rounded-3xl border border-slate-700/10 bg-[#082B5C] p-5 text-white shadow-lg md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1 text-left">
+            <h1 className="text-sm font-black uppercase tracking-widest text-orange-400">Tracking Operasional Talent</h1>
+            <p className="text-sm font-semibold text-slate-200">
+              Pantau perjalanan, verifikasi titik temu, dan koordinasi pelanggan dari satu panel kerja.
+            </p>
           </div>
-
-          <div className="flex items-center gap-2 bg-white/10 p-1 rounded-xl">
-            <button
-              onClick={() => {
-                setActiveRole('customer');
-                setPermissionsGranted(null);
-              }}
-              className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                activeRole === 'customer' 
-                  ? 'bg-[#FF6500] text-white shadow-md' 
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              👩‍💼 Pelanggan (User)
-            </button>
-            <button
-              onClick={() => {
-                setActiveRole('talent');
-                setPermissionsGranted(null);
-              }}
-              className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                activeRole === 'talent' 
-                  ? 'bg-orange-500 text-white shadow-md' 
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              🛵 Mitra Talent (Rizky)
-            </button>
-          </div>
+          <button
+            onClick={() => setShowChatModal(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-xs font-black text-[#082B5C] shadow-sm transition hover:bg-slate-50"
+          >
+            <MessageSquare size={14} />
+            <span>Buka Chat Pelanggan</span>
+          </button>
         </div>
 
-        {/* BACK LINK AND TITLE HEADER */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+        <div className="flex flex-col justify-between gap-4 text-left sm:flex-row sm:items-center">
           <button
             onClick={() => navigate('/profil-talent')}
-            className="inline-flex items-center gap-1.5 text-xs font-black text-[#082B5C] hover:text-[#FF6500] cursor-pointer group"
+            className="inline-flex items-center gap-2 text-xs font-black text-[#082B5C] transition hover:text-[#FF6500]"
           >
-            <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
-            <span>Kembali ke Dashboard Utama</span>
+            <ArrowLeft size={16} />
+            <span>Kembali ke Dashboard</span>
           </button>
-          
-          <div className="text-right sm:text-left">
-            <span className="text-[10px] font-black text-gray-400 font-mono block">
-              KODE PESANAN: {booking.id}
-            </span>
-          </div>
+          <span className="block text-[10px] font-black text-gray-400">KODE PESANAN: {booking.id}</span>
         </div>
 
-        {/* MAIN LAYOUT GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          {/* LEFT AREA: PETA & STATUS TRACKING (8 COLS) */}
-          <div className="lg:col-span-8 space-y-6">
-            
-            {/* GPS Fallback warning triggers */}
-            {lostSync && (
-              <LostConnectionNotice lostSinceMinutes={4} onRetry={() => setLostSync(false)} />
-            )}
-
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <div className="space-y-6 lg:col-span-8">
             {gpsAccuracy > 50 && (
               <LocationAccuracyWarning accuracyMeters={gpsAccuracy} onRecalibrate={() => setGpsAccuracy(15)} />
             )}
 
-            {/* LIVE INTERACTIVE MAP VISUALIZER */}
-            <div className="relative">
-              <LiveTrackingMap
-                booking={booking}
-                role={activeRole}
-                talentLoc={talentLat !== null && talentLon !== null ? { latitude: talentLat, longitude: talentLon } : null}
-                gpsStatus={gpsStatus}
-                onMeetingPointChange={handleMeetingPointChange}
-              />
-            </div>
+            <LiveTrackingMap
+              booking={booking}
+              role="talent"
+              talentLoc={talentLat !== null && talentLon !== null ? { latitude: talentLat, longitude: talentLon } : null}
+              gpsStatus={gpsStatus}
+              onMeetingPointChange={handleMeetingPointChange}
+              userId={currentUser?.id || booking.talentId}
+            />
 
-            {/* STATUS AND INFO CONTROL CARDS FOR THE ROLES */}
-            {activeRole === 'customer' ? (
-              /* ================== CUSTOMER VIEW ================== */
-              <div className="space-y-6">
-                
-                {/* 1. Estimate ETA blocks */}
-                {(booking.status === 'TALENT_ON_THE_WAY' || booking.status === 'TALENT_NEARBY') && (
-                  <ArrivalEstimate
-                    distanceKm={distanceKm}
-                    etaMinutes={etaMinutes}
-                    meetingPlaceName={booking.meetingPlaceName || booking.location}
-                  />
-                )}
-
-                {/* 2. Main Tracking status details */}
-                <TrackingStatusCard
-                  booking={booking}
-                  distanceKm={distanceKm}
-                  etaMinutes={etaMinutes}
-                  onOpenChat={() => setShowChatModal(true)}
-                  onCallMasked={() => alert('Menghubungkan telepon aman lewat nomor samaran platform (+62-21-9008882)...')}
-                  onOpenHelp={() => alert('Membuka Pusat Layanan Bantuan Darurat Suruhin.')}
-                />
-
-                {/* 3. PIN Verification for customer (shows pin to read to talent) */}
-                {booking.status === 'TALENT_ARRIVED' && (
-                  <MeetingPinVerification
-                    pinCode={verification?.pinRaw || '482913'}
-                    role="customer"
-                    onVerify={handlePINVerification}
-                  />
-                )}
-
-                {/* 4. Active Service Timers */}
-                {booking.status === 'SERVICE_ACTIVE' && (
-                  <ServiceTimer
-                    booking={booking}
-                    role="customer"
-                    onExtendRequest={(mins) => {
-                      alert(`Permintaan perpanjangan tambahan ${mins} menit dikirimkan ke Talent.`);
-                      updateStatus('EXTENSION_REQUESTED', `Pelanggan mengajukan tambahan waktu ${mins} menit.`);
+            {booking.status === 'PAID' && (
+              <div className="space-y-4 rounded-3xl border border-slate-100 bg-white p-6 shadow-md">
+                <h4 className="border-l-3 border-[#FF6500] pl-2 text-sm font-black uppercase tracking-wider text-[#082B5C]">
+                  Pesanan Baru Masuk
+                </h4>
+                <p className="text-xs leading-relaxed text-gray-500">
+                  {booking.customerName} sudah menyelesaikan pembayaran sebesar {formatCurrency(booking.total)}. Konfirmasi pesanan untuk mulai mempersiapkan perjalanan.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      setShowPermissions(true);
+                      updateStatus('TALENT_ACCEPTED', `${talentDisplayName} menerima pesanan.`);
                     }}
-                  />
-                )}
-
-                {/* WAITING FOR PAYMENT ACTION FORM */}
-                {booking.status === 'WAITING_PAYMENT' && (
-                  <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-md text-left space-y-4">
-                    <h4 className="text-sm font-black text-[#082B5C] uppercase tracking-wider border-l-3 border-[#FF6500] pl-2">
-                      Selesaikan Pembayaran Escrow
-                    </h4>
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                      Lakukan pembayaran sebesar <span className="font-extrabold text-[#FF6500]">{formatCurrency(booking.total)}</span> untuk melepaskan penahanan pesanan dan mengizinkan Talent memulai perjalanannya.
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => updateStatus('PAID', 'Pelanggan melunasi pembayaran escrow via QRIS.')}
-                        className="py-3 bg-[#FF6500] hover:bg-[#e05900] text-white font-extrabold text-xs rounded-xl cursor-pointer shadow-md shadow-orange-500/10 active:scale-95 transition-all text-center"
-                      >
-                        Bayar via QRIS / Dompet
-                      </button>
-                      <button
-                        onClick={() => updateStatus('CANCELLED', 'Pelanggan membatalkan pesanan sebelum pembayaran.')}
-                        className="py-3 hover:bg-slate-50 text-gray-500 font-bold text-xs rounded-xl cursor-pointer text-center"
-                      >
-                        Batalkan Pesanan
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* ================== MITRA TALENT VIEW ================== */
-              <div className="space-y-6">
-                
-                {/* 1. If Booking is PAID, Talent must Accept */}
-                {booking.status === 'PAID' && (
-                  <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-md text-left space-y-4">
-                    <h4 className="text-sm font-black text-[#082B5C] uppercase tracking-wider border-l-3 border-[#FF6500] pl-2">
-                      Pesanan Baru Masuk!
-                    </h4>
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                      Siti Aminah telah membayar pesanan. Silakan konfirmasi untuk bersiap-siap melakukan perjalanan.
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => {
-                          setShowPermissions(true);
-                          updateStatus('TALENT_ACCEPTED', 'Tal Rizky menyetujui pesanan.');
-                        }}
-                        className="py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl cursor-pointer shadow-md transition-all text-center"
-                      >
-                        Terima & Konfirmasi
-                      </button>
-                      <button
-                        onClick={() => updateStatus('CANCELLED', 'Talent menolak karena sedang berhalangan.')}
-                        className="py-3 hover:bg-red-50 text-red-500 font-bold text-xs rounded-xl cursor-pointer text-center"
-                      >
-                        Tolak Pesanan
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* 2. After accepting, talent preparing and starts journey */}
-                {(booking.status === 'TALENT_ACCEPTED' || booking.status === 'TALENT_PREPARING') && (
-                  <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-md text-left space-y-4">
-                    <h4 className="text-sm font-black text-[#082B5C] uppercase tracking-wider border-l-3 border-[#FF6500] pl-2">
-                      Siap Berangkat?
-                    </h4>
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                      Sebelum menekan tombol di bawah, pastikan Anda menggunakan pakaian sopan, helm cadangan lengkap, dan baterai HP memadai.
-                    </p>
-                    <button
-                      onClick={() => {
-                        updateStatus('TALENT_ON_THE_WAY', 'Talent memulai rute perjalanan.');
-                      }}
-                      disabled={!meetingPointReady}
-                      className="w-full py-3.5 bg-[#FF6500] hover:bg-[#e05900] disabled:bg-slate-300 disabled:hover:bg-slate-300 text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:cursor-not-allowed shadow-md active:scale-95 transition-all text-center uppercase tracking-wider"
-                    >
-                      {meetingPointReady ? '🛵 Mulai Perjalanan (Mulai Tracking)' : 'Pilih Titik Temu di Peta Dulu'}
-                    </button>
-                  </div>
-                )}
-
-                {/* 3. On-The-Way Stats card for Talent */}
-                {(booking.status === 'TALENT_ON_THE_WAY' || booking.status === 'TALENT_NEARBY') && (
-                  <div className="space-y-4">
-                    {/* Standalone Arrival Confirmation Action with radius checker */}
-                    <ArrivalConfirmation
-                      distanceMeters={distanceKm * 1000}
-                      onConfirmArrival={(notes) => {
-                        updateStatus('TALENT_ARRIVED', notes || 'Talent Rizky telah sampai di lokasi pertemuan.');
-                      }}
-                    />
-
-                    {/* GPS control options for simulation */}
-                    <div className="p-4 bg-slate-100/50 rounded-2xl border border-slate-200/50 text-left space-y-2">
-                      <h5 className="text-[10px] font-black text-[#082B5C] uppercase tracking-widest">
-                        ⚙️ Kontrol Simulator GPS Talent
-                      </h5>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => {
-                            if (meetingLat === null || meetingLon === null) return;
-                            // Instantly move talent close to meeting point
-                            setTalentLat(meetingLat - 0.0005);
-                            setTalentLon(meetingLon - 0.0004);
-                            updateStatus('TALENT_NEARBY', 'Rizky Pratama sudah mendekati lokasi Anda (jarak < 300m).');
-                          }}
-                          className="bg-white hover:bg-slate-50 border border-slate-200 py-1.5 text-[10px] font-bold rounded-lg text-gray-600 cursor-pointer"
-                        >
-                          Simulasikan Mendekat (300m)
-                        </button>
-                        <button
-                          onClick={() => setLostSync(!lostSync)}
-                          className="bg-white hover:bg-slate-50 border border-slate-200 py-1.5 text-[10px] font-bold rounded-lg text-gray-600 cursor-pointer"
-                        >
-                          {lostSync ? 'Hubungkan Kembali' : 'Gondol / Putus GPS'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. PIN input prompt for Talent (must enter PIN from customer) */}
-                {booking.status === 'TALENT_ARRIVED' && (
-                  <MeetingPinVerification
-                    pinCode={verification?.pinRaw || ''}
-                    role="talent"
-                    onVerify={handlePINVerification}
-                  />
-                )}
-
-                {/* 5. Active Service Timers */}
-                {booking.status === 'SERVICE_ACTIVE' && (
-                  <ServiceTimer
-                    booking={booking}
-                    role="talent"
-                    onCompleteService={() => {
-                      updateStatus('SERVICE_COMPLETED_BY_TALENT', 'Talent menyelesaikan durasi layanan pendampingan.');
-                    }}
-                  />
-                )}
-
-                {/* SERVICE COMPLETED BY TALENT -> WAITING CUSTOMER APPROVAL */}
-                {booking.status === 'SERVICE_COMPLETED_BY_TALENT' && (
-                  <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-md text-left space-y-4">
-                    <h4 className="text-sm font-black text-[#082B5C] uppercase tracking-wider border-l-3 border-emerald-500/20 pl-2">
-                      Layanan Telah Anda Selesaikan
-                    </h4>
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                      Sistem sedang menunggu konfirmasi penyelesaian dari pihak pelanggan. Setelah disetujui, dana akan segera dicairkan ke saldo Anda.
-                    </p>
-                    <button
-                      onClick={() => updateStatus('COMPLETED', 'Layanan selesai secara resmi via simulator.')}
-                      className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl cursor-pointer text-center"
-                    >
-                      Bypass & Selesaikan Pesanan (Simulate Customer Accept)
-                    </button>
-                  </div>
-                )}
-
+                    className="rounded-xl bg-emerald-600 py-3 text-center text-xs font-extrabold text-white shadow-md transition hover:bg-emerald-700"
+                  >
+                    Terima Pesanan
+                  </button>
+                  <button
+                    onClick={() => updateStatus('CANCELLED', `${talentDisplayName} menolak pesanan karena berhalangan.`)}
+                    className="rounded-xl py-3 text-center text-xs font-bold text-red-500 transition hover:bg-red-50"
+                  >
+                    Tolak Pesanan
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* EMERGENCY SOS SAFETY INJECTIONS BUTTON */}
-            <div className="pt-2">
-              <EmergencyButton bookingId={booking.id} onRaiseIncident={handleRaiseSOS} />
-            </div>
+            {(booking.status === 'TALENT_ACCEPTED' || booking.status === 'TALENT_PREPARING') && (
+              <div className="space-y-4 rounded-3xl border border-slate-100 bg-white p-6 shadow-md">
+                <h4 className="border-l-3 border-[#FF6500] pl-2 text-sm font-black uppercase tracking-wider text-[#082B5C]">
+                  Siap Berangkat
+                </h4>
+                <p className="text-xs leading-relaxed text-gray-500">
+                  Pastikan perlengkapan lengkap dan titik temu sudah benar sebelum tracking perjalanan dimulai.
+                </p>
+                <button
+                  onClick={() => updateStatus('TALENT_ON_THE_WAY', `${talentDisplayName} memulai perjalanan menuju lokasi pelanggan.`)}
+                  disabled={!meetingPointReady}
+                  className="w-full rounded-xl bg-[#FF6500] py-3.5 text-center text-xs font-extrabold uppercase tracking-wider text-white shadow-md transition hover:bg-[#e05900] disabled:cursor-not-allowed disabled:bg-slate-300"
+                >
+                  {meetingPointReady ? 'Mulai Perjalanan' : 'Pilih Titik Temu di Peta Dulu'}
+                </button>
+              </div>
+            )}
 
+            {(booking.status === 'TALENT_ON_THE_WAY' || booking.status === 'TALENT_NEARBY') && (
+              <div className="space-y-4">
+                <ArrivalEstimate
+                  distanceKm={distanceKm}
+                  etaMinutes={etaMinutes}
+                  meetingPlaceName={booking.meetingPlaceName || booking.location}
+                />
+                <ArrivalConfirmation
+                  distanceMeters={distanceKm * 1000}
+                  onConfirmArrival={(notes) => updateStatus('TALENT_ARRIVED', notes || `${talentDisplayName} telah tiba di lokasi.`)}
+                />
+              </div>
+            )}
+
+            {booking.status === 'TALENT_ARRIVED' && (
+              <MeetingPinVerification
+                pinCode={verification?.pinRaw || ''}
+                role="talent"
+                onVerify={handlePinVerification}
+              />
+            )}
+
+            {booking.status === 'SERVICE_ACTIVE' && (
+              <ServiceTimer
+                booking={booking}
+                role="talent"
+                onCompleteService={() => updateStatus('SERVICE_COMPLETED_BY_TALENT', `${talentDisplayName} menandai layanan selesai.`)}
+              />
+            )}
+
+            {booking.status === 'SERVICE_COMPLETED_BY_TALENT' && (
+              <div className="space-y-3 rounded-3xl border border-slate-100 bg-white p-6 shadow-md">
+                <h4 className="border-l-3 border-emerald-500/20 pl-2 text-sm font-black uppercase tracking-wider text-[#082B5C]">
+                  Menunggu Konfirmasi Pelanggan
+                </h4>
+                <p className="text-xs leading-relaxed text-gray-500">
+                  Layanan sudah Anda selesaikan. Sistem akan menutup pesanan setelah pelanggan memberikan konfirmasi akhir.
+                </p>
+              </div>
+            )}
+
+            {booking.status === 'COMPLETED' && (
+              <div className="space-y-3 rounded-3xl border border-emerald-100 bg-white p-6 shadow-md">
+                <h4 className="border-l-3 border-emerald-500 pl-2 text-sm font-black uppercase tracking-wider text-[#082B5C]">
+                  Pesanan Selesai
+                </h4>
+                <p className="text-xs leading-relaxed text-gray-500">
+                  Tracking sudah berhenti dan aktivitas pesanan tercatat lengkap.
+                </p>
+              </div>
+            )}
+
+            <EmergencyButton bookingId={booking.id} onRaiseIncident={handleRaiseSOS} />
           </div>
 
-          {/* RIGHT AREA: DETAILS, PRIVACY & TIMELINES (4 COLS) */}
-          <div className="lg:col-span-4 space-y-6">
-            
-            {/* 1. Meeting point card address details */}
-            <div className="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm text-left space-y-3.5">
-              <h4 className="text-xs font-black text-[#082B5C] uppercase tracking-widest border-l-3 border-[#FF6500] pl-2">
-                Info Titik Temu Pertemuan
+          <div className="space-y-6 lg:col-span-4">
+            <div className="space-y-3.5 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+              <h4 className="border-l-3 border-[#FF6500] pl-2 text-xs font-black uppercase tracking-widest text-[#082B5C]">
+                Info Titik Temu
               </h4>
-              
-              <div className="space-y-3 text-xs text-[#172033]/85 font-medium leading-relaxed">
+              <div className="space-y-3 text-xs font-medium leading-relaxed text-[#172033]/85">
                 <div>
-                  <span className="text-[9px] font-extrabold text-gray-400 block uppercase">Alamat Pertemuan</span>
-                  <p className="font-extrabold text-[#082B5C] mt-0.5">{booking.meetingPlaceName || 'Alun-Alun Kota Tasikmalaya'}</p>
-                  <p className="text-gray-500 text-[11px] mt-0.5">{booking.meetingAddress || booking.location}</p>
+                  <span className="block text-[9px] font-extrabold uppercase text-gray-400">Lokasi</span>
+                  <p className="mt-0.5 font-extrabold text-[#082B5C]">{booking.meetingPlaceName || 'Titik Temu Pelanggan'}</p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">{booking.meetingAddress || booking.location}</p>
                 </div>
-
                 <div>
-                  <span className="text-[9px] font-extrabold text-gray-400 block uppercase">Patokan / Catatan Lokasi</span>
-                  <p className="text-[#FF6500] font-bold mt-0.5">{booking.meetingNotes || 'Saya mengenakan jaket hitam dan celana denim biru'}</p>
+                  <span className="block text-[9px] font-extrabold uppercase text-gray-400">Catatan</span>
+                  <p className="mt-0.5 font-bold text-[#FF6500]">{booking.meetingNotes || 'Belum ada catatan tambahan dari pelanggan.'}</p>
                 </div>
-
-                <div className="flex justify-between items-center border-t border-slate-50 pt-3 text-[10px] text-gray-400">
-                  <span>Tipe Pertemuan:</span>
+                <div className="flex items-center justify-between border-t border-slate-50 pt-3 text-[10px] text-gray-400">
+                  <span>Tipe Pertemuan</span>
                   <span className="font-extrabold text-[#082B5C]">
-                    {booking.meetingType ? booking.meetingType.replace(/_/g, ' ') : 'CUSTOMER LOCATION'}
+                    {booking.meetingType ? booking.meetingType.replace(/_/g, ' ') : 'CUSTOM LOCATION'}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* 2. Interactive Booking Timeline steps */}
+            <div className="space-y-3 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black uppercase tracking-widest text-[#082B5C]">Chat Terbaru</h4>
+                <button onClick={() => setShowChatModal(true)} className="text-[11px] font-bold text-[#FF6500]">
+                  Buka
+                </button>
+              </div>
+              {bookingChat.messages.length === 0 ? (
+                <p className="text-xs leading-relaxed text-gray-500">Belum ada pesan pada pesanan ini.</p>
+              ) : (
+                <div className="space-y-2">
+                  {bookingChat.messages.slice(-3).map((message) => (
+                    <div key={message.id} className="rounded-2xl bg-slate-50 px-3 py-2 text-left">
+                      <p className="text-[11px] font-bold text-[#082B5C]">{message.senderName}</p>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-500">{message.message}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <TrackingTimeline currentStatus={booking.status} />
-
-            {/* 3. Safety privacy instructions notice */}
             <TrackingPrivacyNotice />
-
           </div>
-
         </div>
-
       </div>
 
-      {/* DETAILED REAL-TIME SIMULATED CHAT POPUP DRAWER */}
       {showChatModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-4 z-50">
-          <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-xl flex flex-col h-[500px] overflow-hidden border border-slate-100 animate-scale-up">
-            {/* Header */}
-            <div className="bg-[#082B5C] text-white px-5 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-orange-500 text-white font-black text-xs flex items-center justify-center">
-                  RP
-                </div>
-                <div className="text-left">
-                  <h4 className="text-xs font-black">Rizky Pratama (Talent)</h4>
-                  <span className="text-[9px] text-emerald-400 font-semibold block">Online • Membawa motor Honda Beat</span>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 backdrop-blur-xs sm:items-center">
+          <div className="flex h-[520px] w-full max-w-md flex-col overflow-hidden rounded-t-3xl border border-slate-100 bg-white shadow-xl sm:rounded-3xl">
+            <div className="flex items-center justify-between bg-[#082B5C] px-5 py-4 text-white">
+              <div className="space-y-0.5 text-left">
+                <h4 className="text-xs font-black">{booking.customerName}</h4>
+                <span className="block text-[10px] text-slate-300">{booking.customerPhone}</span>
               </div>
-              <button
-                onClick={() => setShowChatModal(false)}
-                className="p-1.5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white cursor-pointer"
-              >
+              <button onClick={() => setShowChatModal(false)} className="rounded-full p-1.5 text-slate-300 transition hover:bg-white/10 hover:text-white">
                 <X size={18} />
               </button>
             </div>
 
-            {/* Message streams */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 custom-scrollbar">
-              <div className="text-center">
-                <span className="text-[9px] bg-slate-200 text-gray-600 px-2 py-0.5 rounded-full font-bold uppercase">
-                  Log Chat Terenkripsi Aman Suruhin
-                </span>
-              </div>
-              
-              {chatMessages.map((msg, idx) => {
-                const isMe = msg.sender === activeRole;
-                return (
-                  <div key={idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-xs text-left ${
-                      isMe 
-                        ? 'bg-[#FF6500] text-white rounded-tr-none' 
-                        : 'bg-white text-gray-800 border border-slate-100 rounded-tl-none shadow-sm'
-                    }`}>
-                      <p className="font-medium leading-relaxed">{msg.text}</p>
-                      <span className={`text-[8px] mt-1 block text-right ${isMe ? 'text-orange-200' : 'text-gray-400'}`}>
-                        {msg.time}
-                      </span>
+            <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4">
+              {bookingChat.isLoading ? (
+                <p className="text-center text-xs font-semibold text-gray-400">Memuat percakapan...</p>
+              ) : bookingChat.messages.length === 0 ? (
+                <p className="text-center text-xs font-semibold text-gray-400">Belum ada pesan. Gunakan chat untuk koordinasi titik temu atau kebutuhan di lapangan.</p>
+              ) : (
+                bookingChat.messages.map((message) => {
+                  const isMe = message.senderRole === 'talent';
+                  return (
+                    <div key={message.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                      <div
+                        className={`max-w-[78%] rounded-2xl px-3.5 py-2.5 text-left text-xs ${
+                          isMe
+                            ? 'rounded-tr-none bg-[#FF6500] text-white'
+                            : 'rounded-tl-none border border-slate-100 bg-white text-gray-800 shadow-sm'
+                        }`}
+                      >
+                        <p className="font-semibold leading-relaxed">{message.message}</p>
+                        <span className={`mt-1 block text-right text-[9px] ${isMe ? 'text-orange-200' : 'text-gray-400'}`}>
+                          {formatChatTime(message.createdAt)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
 
-            {/* Input Footer */}
-            <form onSubmit={handleSendMessage} className="p-3 bg-white border-t border-slate-100 flex gap-2">
+            <form onSubmit={handleSendMessage} className="flex gap-2 border-t border-slate-100 bg-white p-3">
               <input
                 type="text"
                 required
-                value={newMsg}
-                onChange={(e) => setNewMsg(e.target.value)}
-                placeholder="Ketik pesan pesan..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-[#172033] focus:outline-none focus:ring-1 focus:ring-[#FF6500]"
+                value={newMessage}
+                onChange={(event) => setNewMessage(event.target.value)}
+                placeholder="Tulis pesan ke pelanggan"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-[#172033] focus:outline-none focus:ring-1 focus:ring-[#FF6500]"
               />
               <button
                 type="submit"
-                className="bg-[#FF6500] hover:bg-[#e05900] text-white px-4 py-2 text-xs font-black rounded-xl cursor-pointer transition-all"
+                className="rounded-xl bg-[#FF6500] px-4 py-2 text-xs font-black text-white transition hover:bg-[#e05900]"
               >
                 Kirim
               </button>
             </form>
+
+            {bookingChat.error && (
+              <div className="border-t border-amber-100 bg-amber-50 px-4 py-2 text-[11px] font-semibold text-amber-700">
+                {bookingChat.error}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* LOCATION PERMISSION PROMPT DIALOGS */}
       <LocationPermissionModal
         isOpen={showPermissions}
         onClose={() => setShowPermissions(false)}
-        role={activeRole}
+        role="talent"
         onGrant={(type) => {
-          setPermissionsGranted(type);
           setShowPermissions(false);
-          if (type === 'always' || type === 'once') {
-            setGpsStatus('connected');
-          } else {
-            setGpsStatus('error');
-          }
+          setGpsStatus(type === 'deny' ? 'error' : 'connected');
         }}
       />
     </div>
   );
+}
+
+function formatChatTime(value: string) {
+  return new Date(value).toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }

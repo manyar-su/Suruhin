@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getSupabaseBrowserClient } from '../lib/supabase/client';
 import { type MapCoordinate } from '../lib/mapbox/helpers';
 
@@ -15,6 +15,7 @@ interface UseTrackingOptions {
   enabled: boolean;
   publishedTalentLocation?: MapCoordinate | null;
   role: 'customer' | 'talent' | 'admin';
+  userId?: string | null;
 }
 
 const STORAGE_KEY_PREFIX = 'suruhin_realtime_tracking';
@@ -23,9 +24,8 @@ const LOCAL_EVENT_NAME = 'suruhin_tracking_broadcast';
 /**
  * Publishes and subscribes talent tracking updates through Supabase Realtime with local fallback.
  */
-export function useTracking({ bookingId, enabled, publishedTalentLocation, role }: UseTrackingOptions) {
+export function useTracking({ bookingId, enabled, publishedTalentLocation, role, userId }: UseTrackingOptions) {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
-  const channelRef = useRef<any>(null);
   const [talentLocation, setTalentLocation] = useState<TrackingSnapshot | null>(null);
   const [connectionState, setConnectionState] = useState<TrackingConnectionState>('idle');
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
@@ -75,18 +75,30 @@ export function useTracking({ bookingId, enabled, publishedTalentLocation, role 
 
     setConnectionState('connecting');
 
-    const channel = supabase.channel(`tracking:${bookingId}`, {
-      config: {
-        broadcast: {
-          self: true,
+    const channel = supabase
+      .channel(`tracking:${bookingId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'live_locations',
+          filter: `booking_id=eq.${bookingId}`,
         },
-      },
-    });
+        ({ new: payload }: { new: any }) => {
+          if (!payload || payload.role !== 'TALENT') {
+            return;
+          }
 
-    channel
-      .on('broadcast', { event: 'location_update' }, ({ payload }: { payload: TrackingSnapshot }) => {
-        handleSnapshot(payload);
-      })
+          handleSnapshot({
+            bookingId: payload.booking_id,
+            latitude: payload.latitude,
+            longitude: payload.longitude,
+            recordedAt: payload.recorded_at,
+            role: 'talent',
+          });
+        }
+      )
       .subscribe((status: string) => {
         if (status === 'SUBSCRIBED') {
           setConnectionState('connected');
@@ -94,15 +106,9 @@ export function useTracking({ bookingId, enabled, publishedTalentLocation, role 
           setConnectionState('error');
         }
       });
-
-    channelRef.current = channel;
-
     return () => {
       window.removeEventListener(LOCAL_EVENT_NAME, localListener as EventListener);
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      supabase.removeChannel(channel);
     };
   }, [bookingId, enabled, supabase]);
 
@@ -123,19 +129,30 @@ export function useTracking({ bookingId, enabled, publishedTalentLocation, role 
     localStorage.setItem(getTrackingStorageKey(bookingId), JSON.stringify(snapshot));
     window.dispatchEvent(new CustomEvent<TrackingSnapshot>(LOCAL_EVENT_NAME, { detail: snapshot }));
 
-    if (channelRef.current) {
-      channelRef.current
-        .send({
-          type: 'broadcast',
-          event: 'location_update',
-          payload: snapshot,
+    if (supabase) {
+      supabase
+        .from('live_locations')
+        .upsert({
+          id: `${bookingId}-talent-${userId || 'suruhin'}`,
+          booking_id: bookingId,
+          user_id: userId || 'suruhin-talent',
+          role: 'TALENT',
+          latitude: publishedTalentLocation.latitude,
+          longitude: publishedTalentLocation.longitude,
+          accuracy: 10,
+          heading: 0,
+          speed: 0,
+          recorded_at: snapshot.recordedAt,
+          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+        }, {
+          onConflict: 'booking_id,user_id,role',
         })
         .catch((error: unknown) => {
           console.error(error);
           setConnectionState('fallback');
         });
     }
-  }, [bookingId, enabled, publishedTalentLocation?.latitude, publishedTalentLocation?.longitude, role]);
+  }, [bookingId, enabled, publishedTalentLocation?.latitude, publishedTalentLocation?.longitude, role, supabase, userId]);
 
   return {
     connectionState,

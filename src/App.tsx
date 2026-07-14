@@ -156,7 +156,7 @@ export default function App() {
       case 'syarat-ketentuan':
         return <SyaratKetentuan />;
       case 'pesanan-tracking':
-        return <PesananTrackingPage bookingId={currentRoute.slug || ''} navigate={navigate} />;
+        return <PesananTrackingPage bookingId={currentRoute.slug || ''} navigate={navigate} currentUser={currentUser} />;
       case 'not-found':
       default:
         return (

@@ -24,6 +24,7 @@ interface LiveTrackingMapProps {
   talentLoc: { latitude: number; longitude: number } | null;
   gpsStatus?: 'connected' | 'searching' | 'error';
   onMeetingPointChange?: (point: MapCoordinate) => void;
+  userId?: string | null;
 }
 
 export function LiveTrackingMap({
@@ -32,6 +33,7 @@ export function LiveTrackingMap({
   talentLoc,
   gpsStatus = 'connected',
   onMeetingPointChange,
+  userId,
 }: LiveTrackingMapProps) {
   const mapboxAvailable = isMapboxReady();
   const [meetingPoint, setMeetingPoint] = useState<MapCoordinate | null>(() => {
@@ -117,6 +119,7 @@ export function LiveTrackingMap({
     enabled: trackingEnabled,
     publishedTalentLocation: role === 'talent' ? talentLoc : null,
     role,
+    userId,
   });
 
   const customerPosition = customerGeo.position || meetingPoint;

@@ -233,7 +233,7 @@ export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
         </div>
         {mode === 'login' && (
           <p className="text-[10px] text-[#082B5C]/70">
-            Demo akun: nomor <strong>08123456789</strong> dengan PIN <strong>1234</strong>.
+            Gunakan nomor WhatsApp dan PIN yang sudah terdaftar pada akun Anda.
           </p>
         )}
       </div>
