@@ -1,0 +1,6 @@
+{
+  "name": "Suruhin",
+  "description": "Marketplace jasa lokal profesional di Tasikmalaya dan sekitarnya. Apa aja? Suruhin aja.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
