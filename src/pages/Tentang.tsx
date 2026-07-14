@@ -1,5 +1,5 @@
 import { Container } from '../components/layout/Container';
-import { Target, Users, Landmark, Flame } from 'lucide-react';
+import { Target, Users, Landmark, Flame, ShieldCheck, SearchCheck, LayoutDashboard } from 'lucide-react';
 
 export function Tentang() {
   const values = [
@@ -23,6 +23,24 @@ export function Tentang() {
       desc: 'Membantu urusan rumah tangga, pengantaran anak sekolah, titipan belanjaan, hingga teman olahraga agar hidup warga Tasikmalaya lebih seimbang.',
       icon: Target,
     }
+  ];
+
+  const productDirections = [
+    {
+      title: 'Marketplace yang bisa dipercaya',
+      desc: 'Suruhin tidak hanya menampilkan jasa, tetapi juga memprioritaskan rating, status verifikasi, dan sinyal kesiapan kerja sebelum pengguna memesan.',
+      icon: SearchCheck,
+    },
+    {
+      title: 'Dashboard operasional terpisah',
+      desc: 'Area tracking, order, dan pengelolaan jasa dipisahkan dari halaman promosi supaya alur pengguna lebih jelas dan data akun lebih terjaga.',
+      icon: LayoutDashboard,
+    },
+    {
+      title: 'Lapisan keamanan terus berkembang',
+      desc: 'Session timeout, pembatasan login, dan pemisahan akses halaman menjadi fondasi sebelum nantinya ditingkatkan ke backend penuh.',
+      icon: ShieldCheck,
+    },
   ];
 
   return (
@@ -72,6 +90,29 @@ export function Tentang() {
                     <h3 className="text-xs font-black text-[#082B5C] uppercase tracking-wider mb-1.5">{val.title}</h3>
                     <p className="text-[11px] text-gray-500 leading-relaxed">{val.desc}</p>
                   </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto mt-16 rounded-3xl border border-slate-100 bg-white p-8 shadow-xs">
+          <div className="max-w-2xl mb-6">
+            <h2 className="text-xl font-black text-[#082B5C]">Arah pengembangan produk Suruhin</h2>
+            <p className="mt-2 text-sm text-[#172033]/70 leading-relaxed">
+              Pengembangan terbaru diarahkan agar Suruhin terasa seperti marketplace jasa lokal yang lebih siap dipakai harian: pencarian lebih rapi, trust layer lebih terlihat, dan area akun semakin terstruktur.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {productDirections.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="rounded-2xl border border-slate-100 bg-slate-50 px-5 py-5">
+                  <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-50 text-[#FF6500]">
+                    <Icon size={18} />
+                  </div>
+                  <h3 className="text-sm font-black text-[#082B5C]">{item.title}</h3>
+                  <p className="mt-2 text-xs text-gray-500 leading-relaxed">{item.desc}</p>
                 </div>
               );
             })}

@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigation } from './hooks/useNavigation';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { Modal } from './components/shared/Modal';
 import { AuthForm } from './components/forms/AuthForm';
+import { Button } from './components/shared/Button';
 import { Talent } from './types';
+import { clearUserSession, getCurrentSessionUser, touchUserSession, updateStoredUser } from './lib/authSession';
 
 // Pages
 import { Home } from './pages/Home';
@@ -28,27 +30,83 @@ export default function App() {
   const [selectedLocation, setSelectedLocation] = useState('Kota Tasikmalaya');
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register' | null>(null);
   
-  // Real-time logged in user state
   const [currentUser, setCurrentUser] = useState<Talent | null>(() => {
-    const saved = localStorage.getItem('suruhin_user');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    return null;
+    return getCurrentSessionUser();
   });
 
+  const protectedPages = useMemo(
+    () => new Set(['profil-talent', 'talent-jasa', 'talent-jasa-buat', 'talent-jasa-edit', 'talent-jasa-detail', 'admin-review-jasa', 'pesanan-tracking']),
+    []
+  );
+
+  const isProtectedRoute = protectedPages.has(currentRoute.page) || currentRoute.path.startsWith('/dashboard/');
+
+  useEffect(() => {
+    const user = getCurrentSessionUser();
+    setCurrentUser(user);
+
+    if (user && isProtectedRoute) {
+      touchUserSession();
+    }
+  }, [currentRoute.page, currentRoute.path, isProtectedRoute]);
+
   const handleLogout = () => {
-    localStorage.removeItem('suruhin_user');
+    clearUserSession();
     setCurrentUser(null);
     navigate('/');
   };
 
+  const renderProtectedGate = () => (
+    <div className="py-24 sm:py-32">
+      <div className="max-w-3xl mx-auto px-6">
+        <div className="rounded-[32px] border border-slate-200 bg-white p-8 sm:p-10 shadow-sm text-center space-y-6">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#FF6500]/20 bg-[#FF6500]/10 px-4 py-2 text-xs font-bold text-[#FF6500]">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#18A957]" />
+            <span>Zona dashboard dan pelacakan aktif</span>
+          </div>
+          <div className="space-y-3">
+            <h1 className="text-3xl sm:text-4xl font-black text-[#082B5C] tracking-tight">
+              Area ini khusus akun yang sudah masuk
+            </h1>
+            <p className="max-w-2xl mx-auto text-sm sm:text-base text-[#172033]/70 leading-relaxed">
+              Halaman dashboard, pesanan, dan pelacakan dipisahkan dari halaman promosi agar sesi aktif, riwayat pengguna, dan kontrol keamanan tetap lebih rapi.
+            </p>
+          </div>
+
+          <div className="grid gap-3 text-left sm:grid-cols-3">
+            {[
+              'Sesi otomatis diperbarui selama pengguna aktif.',
+              'Akses dibatasi setelah percobaan login berulang.',
+              'Halaman pesanan tidak dibuka tanpa sesi yang valid.',
+            ].map((item) => (
+              <div key={item} className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs font-semibold text-[#082B5C]">
+                {item}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <Button variant="primary" onClick={() => setAuthModalMode('login')} className="font-bold">
+              Masuk ke Dashboard
+            </Button>
+            <Button variant="outline" onClick={() => setAuthModalMode('register')} className="font-bold">
+              Daftar Akun Baru
+            </Button>
+            <Button variant="ghost" onClick={() => navigate('/layanan')} className="font-bold">
+              Kembali ke Layanan
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   // Render correct active page based on routing system
   const renderPage = () => {
+    if (isProtectedRoute && !currentUser) {
+      return renderProtectedGate();
+    }
+
     switch (currentRoute.page) {
       case 'home':
         return <Home navigate={navigate} />;
@@ -66,7 +124,7 @@ export default function App() {
             currentUser={currentUser}
             onUpdateUser={(updated) => {
               setCurrentUser(updated);
-              localStorage.setItem('suruhin_user', JSON.stringify(updated));
+              updateStoredUser(updated);
               // Sync to custom register storage if applicable
               const savedCustom = localStorage.getItem('suruhin_custom_talent');
               if (savedCustom) {
@@ -155,7 +213,6 @@ export default function App() {
             onSuccess={(user) => {
               setCurrentUser(user);
               setAuthModalMode(null);
-              // Auto go to profile dashboard upon login
               navigate('/profil-talent');
             }}
           />

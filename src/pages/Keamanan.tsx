@@ -1,8 +1,9 @@
 import { Container } from '../components/layout/Container';
 import { ShieldCheck, ShieldAlert, CheckCircle2, MapPin, Star, Phone, PhoneCall, HeartHandshake } from 'lucide-react';
-import { Button } from '../components/shared/Button';
+import { getSessionPolicySummary } from '../lib/authSession';
 
 export function Keamanan() {
+  const sessionPolicy = getSessionPolicySummary();
   const securityPillars = [
     {
       title: 'Verifikasi KTP & SKCK Kepolisian',
@@ -34,6 +35,13 @@ export function Keamanan() {
       icon: PhoneCall,
       color: 'bg-red-50 text-[#E5484D]',
     }
+  ];
+
+  const securityControls = [
+    `Sesi dashboard otomatis idle timeout setelah ${sessionPolicy.inactivityHours} jam tanpa aktivitas.`,
+    `Masa aktif maksimum sesi dibatasi ${sessionPolicy.maxAgeDays} hari untuk mencegah sesi lama tertinggal di perangkat.`,
+    `Form login dibatasi ${sessionPolicy.maxFailedAttempts} percobaan gagal per ${sessionPolicy.failedWindowMinutes} menit.`,
+    `Akun dikunci sementara selama ${sessionPolicy.lockDurationMinutes} menit jika pola percobaan login dianggap berisiko.`,
   ];
 
   return (
@@ -73,6 +81,22 @@ export function Keamanan() {
               </div>
             );
           })}
+        </div>
+
+        <div className="max-w-4xl mx-auto mb-16 rounded-3xl border border-slate-100 bg-white p-8 shadow-xs">
+          <div className="max-w-2xl mb-6">
+            <h2 className="text-xl font-black text-[#082B5C]">Kontrol Sesi, Limit Login, dan Monitoring</h2>
+            <p className="mt-2 text-sm text-[#172033]/70 leading-relaxed">
+              Selain verifikasi talent dan tracking pesanan, Suruhin sekarang memisahkan area dashboard dari halaman publik dan menerapkan pembatasan sesi dasar agar akun tidak mudah disalahgunakan di perangkat bersama.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {securityControls.map((item) => (
+              <div key={item} className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4 text-sm font-semibold text-[#082B5C]">
+                {item}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Legal Declaration */}

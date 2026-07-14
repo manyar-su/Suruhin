@@ -1,5 +1,5 @@
 import { Container } from '../components/layout/Container';
-import { Search, MapPin, CalendarCheck, CheckCircle2, Award, UserPlus, FileSignature, Wallet } from 'lucide-react';
+import { Search, MapPin, CalendarCheck, CheckCircle2, Award, UserPlus, FileSignature, Wallet, ShieldCheck, TimerReset, BadgeCheck } from 'lucide-react';
 import { Button } from '../components/shared/Button';
 
 interface CaraKerjaProps {
@@ -28,6 +28,29 @@ export function CaraKerja({ navigate }: CaraKerjaProps) {
       desc: 'Talent datang tepat waktu menyelesaikan tugas dengan sopan. Setelah rampung, berikan rating ulasan jujur untuk meningkatkan layanan.',
       icon: CheckCircle2,
     }
+  ];
+
+  const controlPoints = [
+    {
+      title: 'Eksplorasi publik tanpa hambatan',
+      desc: 'Pengguna bisa menjelajahi katalog layanan dan talent tanpa harus langsung masuk ke dashboard.',
+      icon: Search,
+    },
+    {
+      title: 'Masuk hanya saat transaksi dimulai',
+      desc: 'Saat menuju tracking, pesanan, atau dashboard, sistem meminta sesi login aktif agar data order tidak terbuka bebas.',
+      icon: ShieldCheck,
+    },
+    {
+      title: 'Limit percobaan & timeout sesi',
+      desc: 'Percobaan login dibatasi dan sesi akan ditutup otomatis bila tidak aktif untuk menekan risiko penyalahgunaan.',
+      icon: TimerReset,
+    },
+    {
+      title: 'Talent tervalidasi sebelum tampil',
+      desc: 'Prioritas tampilan diberikan pada talent yang siap kerja, terverifikasi, dan memiliki rekam rating kuat.',
+      icon: BadgeCheck,
+    },
   ];
 
   const talentSteps = [
@@ -143,6 +166,29 @@ export function CaraKerja({ navigate }: CaraKerjaProps) {
             </Button>
           </div>
 
+        </div>
+
+        <div className="mt-14 rounded-3xl border border-slate-100 bg-white p-8 shadow-xs">
+          <div className="max-w-2xl mb-6">
+            <h2 className="text-xl font-black text-[#082B5C]">Alur baru yang lebih jelas antara marketing dan aplikasi</h2>
+            <p className="mt-2 text-sm text-[#172033]/70 leading-relaxed">
+              Suruhin kini memisahkan halaman eksplorasi publik dengan area operasional akun. Tujuannya supaya onboarding tetap ringan, tetapi saat pengguna sudah masuk ke fase order, proteksi sesi dan kontrol akses mulai diberlakukan.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {controlPoints.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-5">
+                  <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#082B5C] text-white">
+                    <Icon size={18} />
+                  </div>
+                  <h3 className="text-sm font-black text-[#082B5C]">{item.title}</h3>
+                  <p className="mt-2 text-xs text-gray-500 leading-relaxed">{item.desc}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </Container>
     </div>

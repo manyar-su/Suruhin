@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
-import { Mail, Phone, Lock, User, KeyRound, Sparkles, CheckCircle } from 'lucide-react';
+import { Phone, Lock, User, KeyRound, CheckCircle, ShieldCheck, TimerReset } from 'lucide-react';
 import { Button } from '../shared/Button';
 import { Talent } from '../../types';
-import { talents } from '../../data/talents';
+import {
+  checkAuthSubmitThrottle,
+  checkLoginAttempt,
+  clearLoginAttempts,
+  createUserSession,
+  getFailedAttemptSummary,
+  isPhoneAlreadyRegistered,
+  normalizePhone,
+  recordFailedLogin,
+  registerCustomCredential,
+  resolveLoginUser,
+} from '../../lib/authSession';
 
 interface AuthFormProps {
   initialMode?: 'login' | 'register';
@@ -25,37 +36,62 @@ export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [error, setError] = useState('');
+  const [securityMessage, setSecurityMessage] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSecurityMessage('');
 
-    if (!loginPhone.trim() || loginPhone.length < 9) {
+    const normalizedPhone = normalizePhone(loginPhone);
+    const normalizedPin = loginPassword.trim();
+
+    if (!normalizedPhone || normalizedPhone.length < 9) {
       setError('Nomor WhatsApp tidak valid.');
       return;
     }
-    if (!loginPassword.trim() || loginPassword.length < 4) {
-      setError('Password PIN harus minimal 4 digit.');
+    if (!/^\d{4,6}$/.test(normalizedPin)) {
+      setError('PIN harus terdiri dari 4 sampai 6 angka.');
+      return;
+    }
+
+    const throttle = checkAuthSubmitThrottle('login');
+    if (!throttle.allowed) {
+      setError(throttle.message);
+      return;
+    }
+
+    const attemptStatus = checkLoginAttempt(normalizedPhone);
+    if (!attemptStatus.allowed) {
+      setError(attemptStatus.message);
       return;
     }
 
     setIsSubmitting(true);
     setTimeout(() => {
+      const loggedUser = resolveLoginUser(normalizedPhone, normalizedPin);
+
+      if (!loggedUser) {
+        setIsSubmitting(false);
+        const guard = recordFailedLogin(normalizedPhone);
+        const summary = getFailedAttemptSummary(normalizedPhone);
+        if (guard.lockedUntil && summary?.lockMessage) {
+          setError(summary.lockMessage);
+          return;
+        }
+        setError(
+          summary?.remainingAttempts !== undefined
+            ? `Nomor atau PIN tidak cocok. Sisa percobaan: ${summary.remainingAttempts}.`
+            : 'Nomor atau PIN tidak cocok.'
+        );
+        return;
+      }
+
+      clearLoginAttempts(normalizedPhone);
+      createUserSession(loggedUser);
       setIsSubmitting(false);
       setIsDone(true);
-      
-      // Look for a custom registered talent, or default to the first mock talent (Rizky Pratama)
-      const savedCustom = localStorage.getItem('suruhin_custom_talent');
-      let loggedUser: Talent = talents[0]; // Default: Rizky Pratama
-      if (savedCustom) {
-        try {
-          loggedUser = JSON.parse(savedCustom);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-      
-      localStorage.setItem('suruhin_user', JSON.stringify(loggedUser));
+      setSecurityMessage('Sesi aman berhasil dibuat. Aktivitas dashboard akan dipantau otomatis.');
       setTimeout(() => {
         onSuccess(loggedUser);
       }, 1000);
@@ -65,17 +101,31 @@ export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSecurityMessage('');
+
+    const normalizedPhone = normalizePhone(registerPhone);
+    const normalizedPin = registerPassword.trim();
 
     if (!registerName.trim()) {
       setError('Nama lengkap wajib diisi.');
       return;
     }
-    if (!registerPhone.trim() || registerPhone.length < 9) {
+    if (!normalizedPhone || normalizedPhone.length < 9) {
       setError('Nomor WhatsApp tidak valid.');
       return;
     }
-    if (!registerPassword.trim() || registerPassword.length < 4) {
-      setError('Password PIN harus minimal 4 digit.');
+    if (!/^\d{4,6}$/.test(normalizedPin)) {
+      setError('PIN harus terdiri dari 4 sampai 6 angka.');
+      return;
+    }
+    if (isPhoneAlreadyRegistered(normalizedPhone)) {
+      setError('Nomor ini sudah terdaftar. Silakan masuk menggunakan akun yang ada.');
+      return;
+    }
+
+    const throttle = checkAuthSubmitThrottle('register');
+    if (!throttle.allowed) {
+      setError(throttle.message);
       return;
     }
 
@@ -114,7 +164,9 @@ export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
       };
 
       localStorage.setItem('suruhin_custom_talent', JSON.stringify(newTalentUser));
-      localStorage.setItem('suruhin_user', JSON.stringify(newTalentUser));
+      registerCustomCredential(normalizedPhone, normalizedPin, newTalentUser.id);
+      createUserSession(newTalentUser);
+      setSecurityMessage('Akun baru diamankan dengan sesi aktif dan limit percobaan login.');
 
       setTimeout(() => {
         onSuccess(newTalentUser);
@@ -131,7 +183,7 @@ export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
         <h3 className="text-lg font-black text-[#082B5C]">
           {mode === 'login' ? 'Masuk Berhasil!' : 'Pendaftaran Sukses!'}
         </h3>
-        <p className="text-xs text-gray-500">Menghubungkan sesi aman Anda...</p>
+        <p className="text-xs text-gray-500">{securityMessage || 'Menghubungkan sesi aman Anda...'}</p>
       </div>
     );
   }
@@ -170,6 +222,22 @@ export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
         </div>
       )}
 
+      <div className="rounded-2xl border border-[#082B5C]/10 bg-[#082B5C]/[0.03] p-3 text-[11px] text-[#082B5C] leading-relaxed space-y-2">
+        <div className="flex items-center gap-2 font-bold">
+          <ShieldCheck size={14} className="text-[#FF6500]" />
+          <span>Proteksi sesi aktif</span>
+        </div>
+        <div className="flex items-start gap-2">
+          <TimerReset size={13} className="mt-0.5 text-[#FF6500] shrink-0" />
+          <span>Login dibatasi 5 kali percobaan per 15 menit. Jika gagal terus, akses dikunci sementara 30 menit.</span>
+        </div>
+        {mode === 'login' && (
+          <p className="text-[10px] text-[#082B5C]/70">
+            Demo akun: nomor <strong>08123456789</strong> dengan PIN <strong>1234</strong>.
+          </p>
+        )}
+      </div>
+
       {/* LOGIN VIEW */}
       {mode === 'login' ? (
         <form onSubmit={handleLogin} className="space-y-4">
@@ -197,6 +265,8 @@ export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
                 required
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
+                inputMode="numeric"
+                maxLength={6}
                 placeholder="Masukkan PIN rahasia Anda"
                 className="w-full bg-transparent text-[#172033] focus:outline-none"
               />
@@ -275,6 +345,8 @@ export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
                 required
                 value={registerPassword}
                 onChange={(e) => setRegisterPassword(e.target.value)}
+                inputMode="numeric"
+                maxLength={6}
                 placeholder="Buat PIN minimal 4 angka"
                 className="w-full bg-transparent text-[#172033] focus:outline-none"
               />
