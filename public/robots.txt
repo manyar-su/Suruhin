@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://suruhin.vercel.app/sitemap.xml

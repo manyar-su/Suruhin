@@ -1,0 +1,18 @@
+{
+  "name": "Suruhin - Marketplace Jasa Lokal",
+  "short_name": "Suruhin",
+  "description": "Platform untuk mencari talent terpercaya, jasa harian, bantuan rumah tangga, pendamping aktivitas, dan jasa digital di Tasikmalaya.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFF7F0",
+  "theme_color": "#FF6500",
+  "lang": "id-ID",
+  "icons": [
+    {
+      "src": "/assets/logo/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

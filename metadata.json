@@ -1,0 +1,7 @@
+{
+  "name": "Suruhin",
+  "description": "Marketplace jasa lokal untuk membantu kebutuhan harian warga Tasikmalaya dan sekitarnya.",
+  "status": "standalone-web",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
