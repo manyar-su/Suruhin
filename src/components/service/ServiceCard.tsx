@@ -8,11 +8,79 @@ import { FallbackImage } from '../shared/FallbackImage';
 interface ServiceCardProps {
   service: Service;
   onViewDetail: (slug: string) => void;
+  variant?: 'default' | 'featured';
   key?: string | number;
 }
 
-export function ServiceCard({ service, onViewDetail }: ServiceCardProps) {
+export function ServiceCard({ service, onViewDetail, variant = 'default' }: ServiceCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
+
+  if (variant === 'featured') {
+    return (
+      <div className="group flex h-full flex-col overflow-hidden rounded-[1.9rem] border border-white/85 bg-white shadow-[0_20px_55px_rgba(8,43,92,0.08)] transition hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(8,43,92,0.14)]">
+        <div className="relative aspect-[4/4.8] overflow-hidden bg-slate-100">
+          <FallbackImage
+            src={getServiceImagePath(service.image)}
+            alt={service.title}
+            type="service"
+            categorySlug={service.category}
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#091a3f] via-[#091a3f]/8 to-transparent" />
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsFavorite(!isFavorite);
+            }}
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/88 text-gray-500 shadow-lg backdrop-blur transition hover:text-[#E5484D] cursor-pointer"
+            aria-label={isFavorite ? 'Hapus dari favorit' : 'Tambah ke favorit'}
+          >
+            <Heart
+              size={17}
+              className={isFavorite ? 'fill-[#E5484D] stroke-[#E5484D]' : 'stroke-gray-600'}
+            />
+          </button>
+
+          <span className="absolute left-4 top-4 rounded-full bg-white/92 px-3 py-1 text-[11px] font-black text-[#081a44] shadow-sm">
+            {service.categoryName}
+          </span>
+
+          <div className="absolute inset-x-0 bottom-0 z-10 p-5 text-white">
+            <h3
+              onClick={() => onViewDetail(service.slug)}
+              className="text-[1.75rem] font-black leading-[1.05] tracking-[-0.03em] cursor-pointer"
+            >
+              {service.title}
+            </h3>
+            <p className="mt-2 max-w-[22rem] text-sm leading-relaxed text-white/84">
+              {service.shortDescription}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 px-5 py-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 text-sm font-black text-[#081a44]">
+              <Star size={14} className="fill-[#ff9d12] stroke-[#ff9d12]" />
+              <span>{service.rating.toFixed(1)}</span>
+              <span className="font-semibold text-slate-400">({service.reviewCount})</span>
+            </div>
+            <div className="text-sm font-black text-[#081a44]">
+              Mulai <span className="text-[#ff7b00]">{formatCurrency(service.price)}</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => onViewDetail(service.slug)}
+            className="inline-flex h-11 items-center justify-center rounded-2xl bg-[#fff4e7] px-4 text-sm font-black text-[#081a44] transition hover:bg-[#ffe1bf] cursor-pointer"
+          >
+            Detail
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

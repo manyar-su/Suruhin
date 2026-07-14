@@ -1,7 +1,6 @@
 import { CheckCircle, Sparkles } from 'lucide-react';
 import { Button } from '../shared/Button';
 import { getStaticAssetPath } from '../../lib/assetPaths';
-import { FallbackImage } from '../shared/FallbackImage';
 
 interface JoinTalentBannerProps {
   onRegisterAsTalent: () => void;
@@ -9,63 +8,78 @@ interface JoinTalentBannerProps {
 
 export function JoinTalentBanner({ onRegisterAsTalent }: JoinTalentBannerProps) {
   const benefits = [
-    'Pendaftaran 100% Gratis Tanpa Biaya',
-    'Bebas Mengatur Jam Kerja & Jadwal Sendiri',
-    'Penghasilan Transparan Dibayarkan Mingguan',
-    'Dukungan Penuh & Pendampingan Keamanan Tim Admin',
-    'Dapatkan Akses Ratusan Pelanggan Baru Setiap Hari',
+    'Daftar gratis',
+    'Atur waktu sendiri',
+    'Penghasilan transparan',
   ];
 
   return (
-    <section className="py-16 bg-white relative">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-[#082B5C] rounded-3xl overflow-hidden border border-white/5 relative flex flex-col lg:flex-row items-stretch min-h-[420px]">
-          {/* Abstract glowing background blobs */}
-          <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#FF6500]/15 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
+    <section className="bg-white py-14 md:py-16">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-[2.25rem] border border-[#fff2df] bg-[radial-gradient(circle_at_left,_rgba(255,194,86,0.16),_transparent_28%),linear-gradient(135deg,_#fffaf3_0%,_#fff7ee_45%,_#fff_100%)] shadow-[0_22px_60px_rgba(8,43,92,0.08)]">
+          <div className="grid items-center gap-8 lg:grid-cols-[0.88fr_1.12fr]">
+            <div className="relative h-full overflow-hidden">
+              <img
+                src={getStaticAssetPath('ui/layout-reference.png')}
+                alt="Talent Suruhin"
+                className="h-full min-h-[320px] w-full object-cover"
+              />
+            </div>
 
-          {/* Left Column - Graphic/Illustration Mockup */}
-          <div className="lg:w-5/12 relative min-h-[250px] lg:min-h-auto overflow-hidden bg-gradient-to-br from-[#082B5C] to-slate-900 border-b lg:border-b-0 lg:border-r border-white/5">
-            <FallbackImage
-              src={getStaticAssetPath('jasa/join-talent-banner.webp')}
-              alt="Gabung Jadi Talent Suruhin"
-              type="banner"
-              className="w-full h-full object-cover min-h-[250px]"
-            />
-          </div>
+            <div className="px-6 pb-8 pt-2 sm:px-8 lg:px-10">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#ff9f12] shadow-sm">
+                <Sparkles size={14} />
+                Peluang Jadi Talent
+              </span>
 
-          {/* Right Column - Informative text */}
-          <div className="lg:w-7/12 p-8 md:p-12 lg:p-14 text-left flex flex-col justify-center relative z-10 text-white">
-            <span className="text-xs font-bold text-[#FF6500] uppercase tracking-widest flex items-center gap-1.5 mb-3.5">
-              <Sparkles size={14} className="fill-[#FF6500]/10" /> Karir & Penghasilan Tambahan
-            </span>
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 leading-tight">
-              Punya Waktu Luang? Yuk, Jadi Talent Suruhin!
-            </h2>
-            <p className="text-sm text-gray-300 mb-6 leading-relaxed">
-              Ubah waktu santai atau keahlian khusus Anda (mengemudi, berolahraga, bersosialisasi, bersih-bersih, desain grafis) menjadi tambahan pundi penghasilan halal secara mandiri dan aman.
-            </p>
+              <h2 className="mt-5 text-3xl font-black tracking-tight text-[#081a44] sm:text-[2.5rem]">
+                Punya waktu luang?
+                <br />
+                Yuk, jadi Talent Suruhin!
+              </h2>
 
-            {/* Benefits List */}
-            <ul className="space-y-3 mb-8">
-              {benefits.map((benefit, index) => (
-                <li key={index} className="flex items-center gap-2.5 text-xs text-gray-200">
-                  <CheckCircle size={16} className="text-[#FF6500] shrink-0" />
-                  <span className="font-semibold">{benefit}</span>
-                </li>
-              ))}
-            </ul>
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-[#172033]/72">
+                Bantu orang lain di sekitar Tasikmalaya sambil membuka penghasilan tambahan
+                dari layanan yang memang kamu kuasai.
+              </p>
 
-            {/* CTA action button */}
-            <div className="self-start">
-              <Button
-                variant="primary"
-                onClick={onRegisterAsTalent}
-                size="lg"
-                className="font-extrabold shadow-xl shadow-orange-500/10"
-              >
-                Daftar Jadi Talent Sekarang
-              </Button>
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                {benefits.map((benefit) => (
+                  <div
+                    key={benefit}
+                    className="flex items-center gap-3 rounded-2xl border border-white/85 bg-white/88 px-4 py-3 text-sm font-black text-[#081a44] shadow-sm"
+                  >
+                    <CheckCircle size={18} className="text-[#ff8b00]" />
+                    <span>{benefit}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={onRegisterAsTalent}
+                  className="rounded-2xl px-8 font-black shadow-[0_18px_36px_rgba(255,101,0,0.24)]"
+                >
+                  Daftar Jadi Talent
+                </Button>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-2">
+                    {[1, 2, 3, 4].map((index) => (
+                      <img
+                        key={index}
+                        src={`https://images.unsplash.com/photo-${index === 1 ? '1494790108377-be9c29b29330' : index === 2 ? '1500648767791-00dcc994a43e' : index === 3 ? '1506794778202-cad84cf45f1d' : '1502685104226-ee32379fefbe'}?auto=format&fit=crop&w=80&h=80`}
+                        alt={`Talent aktif ${index}`}
+                        referrerPolicy="no-referrer"
+                        className="h-10 w-10 rounded-full border-2 border-white object-cover"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm font-black text-[#081a44]">5.000+ talent aktif</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

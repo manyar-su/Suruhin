@@ -1,7 +1,5 @@
 import { services } from '../../data/services';
-import { SectionHeader } from '../shared/SectionHeader';
 import { ServiceCard } from '../service/ServiceCard';
-import { Button } from '../shared/Button';
 
 interface PopularServicesProps {
   onViewService: (slug: string) => void;
@@ -9,40 +7,34 @@ interface PopularServicesProps {
 }
 
 export function PopularServices({ onViewService, onViewAllServices }: PopularServicesProps) {
-  // Filter popular/featured services or grab the first 8
-  const popularList = services.filter(s => s.featured).slice(0, 8);
-  // Fallback to first 8 if featured count is low
-  const displayList = popularList.length >= 8 ? popularList : services.slice(0, 8);
+  const popularList = services.filter((service) => service.featured).slice(0, 4);
+  const displayList = popularList.length >= 4 ? popularList : services.slice(0, 4);
 
   return (
-    <section className="py-16 bg-[#F5F7FA]/35">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header with view all button */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8">
-          <SectionHeader
-            tagline="Layanan Populer"
-            title="Paling Banyak Dicari warga"
-            description="Layanan terfavorit pilihan masyarakat Tasikmalaya yang siap dipesan kapan saja."
-            align="left"
-            className="mb-0 sm:mb-0"
-          />
-          <Button
-            variant="outline"
+    <section className="bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fbff_100%)] py-14 md:py-16">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.18em] text-[#ff9f12]">Layanan Populer</p>
+            <h2 className="mt-2 text-3xl font-black tracking-tight text-[#081a44] sm:text-[2.15rem]">
+              Paling sering dipesan minggu ini
+            </h2>
+          </div>
+          <button
             onClick={onViewAllServices}
-            className="mt-4 sm:mt-0 font-bold self-start sm:self-auto shrink-0"
-            size="sm"
+            className="hidden text-sm font-black text-[#ff7b00] transition hover:text-[#f15d00] md:inline-flex cursor-pointer"
           >
-            Lihat Semua Layanan
-          </Button>
+            Lihat semua
+          </button>
         </div>
 
-        {/* Services Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        <div className="grid gap-6 lg:grid-cols-4">
           {displayList.map((service) => (
             <ServiceCard
               key={service.id}
               service={service}
               onViewDetail={onViewService}
+              variant="featured"
             />
           ))}
         </div>

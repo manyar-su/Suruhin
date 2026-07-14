@@ -11,7 +11,7 @@ export function SuruhinLogo({ variant = 'dark', className = 'h-8' }: { variant?:
   const orangeColor = '#FF6500';
 
   return (
-    <div className={`flex items-center gap-2 ${className} select-none`}>
+    <div className={`flex items-center gap-2.5 ${className} select-none`}>
       {/* Running 'S' Icon */}
       <svg className="w-8 h-8 shrink-0" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" rx="24" fill={logoColor} />
@@ -27,7 +27,7 @@ export function SuruhinLogo({ variant = 'dark', className = 'h-8' }: { variant?:
       </svg>
 
       {/* Suruhin Wordmark */}
-      <span className="font-sans font-black text-xl tracking-tight flex">
+      <span className="font-sans font-black text-[2rem] leading-none tracking-[-0.04em] flex">
         <span style={{ color: logoColor }}>suru</span>
         <span style={{ color: orangeColor }}>hin</span>
       </span>
@@ -91,24 +91,26 @@ export function Navbar({
         id="navbar-suruhin"
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
-            ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 py-3'
-            : 'bg-transparent py-5'
+            ? 'bg-white/94 backdrop-blur-xl shadow-[0_18px_45px_rgba(8,43,92,0.08)] border-b border-white/70 py-3'
+            : 'bg-transparent py-6'
         }`}
       >
         <Container>
-          <div className="flex items-center justify-between">
+          <div className={`flex items-center justify-between rounded-full transition-all duration-300 ${
+            isScrolled ? 'px-0' : 'border border-white/70 bg-white/80 px-5 py-3 shadow-[0_16px_40px_rgba(8,43,92,0.06)] backdrop-blur'
+          }`}>
             {/* Logo */}
             <div className="cursor-pointer" onClick={() => onNavigate('/')}>
               <SuruhinLogo variant="dark" />
             </div>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-7">
+            <nav className="hidden lg:flex items-center gap-8">
               {navLinks.map((link) => (
                 <div key={link.path} className="relative group">
                   <button
                     onClick={() => onNavigate(link.path)}
-                    className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                    className={`text-[15px] font-bold transition-colors duration-200 cursor-pointer ${
                       isActive(link.path)
                         ? 'text-[#FF6500]'
                         : 'text-[#172033] hover:text-[#FF6500]'
@@ -132,7 +134,7 @@ export function Navbar({
               <div className="relative">
                 <button
                   onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-[#082B5C] bg-[#F5F7FA] hover:bg-gray-100 rounded-xl transition-all border border-[#082B5C]/5 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#082B5C]/6 bg-[#fbfcff] px-4 py-3 text-sm font-bold text-[#082B5C] transition-all hover:bg-gray-100 cursor-pointer"
                 >
                   <MapPin size={16} className="text-[#FF6500]" />
                   <span>{selectedLocation}</span>
@@ -201,12 +203,12 @@ export function Navbar({
                 <>
                   <button
                     onClick={() => onOpenAuth('login')}
-                    className="text-sm font-bold text-[#082B5C] hover:text-[#FF6500] px-4 py-2 transition-colors cursor-pointer"
+                    className="px-4 py-2 text-sm font-bold text-[#082B5C] transition-colors hover:text-[#FF6500] cursor-pointer"
                   >
                     Masuk
                   </button>
-                  <Button onClick={() => onOpenAuth('register')} variant="primary" size="sm">
-                    Daftar
+                  <Button onClick={() => onOpenAuth('register')} variant="primary" size="sm" className="rounded-full px-5 font-black">
+                    Login / Daftar
                   </Button>
                 </>
               )}

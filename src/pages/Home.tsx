@@ -41,40 +41,19 @@ export function Home({ navigate }: HomeProps) {
 
   return (
     <div className="flex flex-col w-full min-h-screen">
-      {/* Hero Header */}
       <HeroSection onSearch={handleSearch} onNavigate={navigate} />
-
-      {/* Grid of Categories */}
-      <CategorySection onSelectCategory={handleSelectCategory} />
-
-      {/* Popular services harian */}
+      <CategorySection onSelectCategory={handleSelectCategory} onViewAll={handleViewAllServices} />
       <PopularServices
         onViewService={handleViewService}
         onViewAllServices={handleViewAllServices}
       />
-
-      {/* Verified Local Talents */}
-      <RecommendedTalents onViewTalent={handleViewTalent} />
-
-      {/* Visual Timeline of process */}
-      <HowItWorks />
-
-      {/* Deep Dive Security protections & standard policies */}
-      <SafetySection onLearnMore={() => navigate('/keamanan')} />
-
-      {/* Join Talent community builder banner */}
       <JoinTalentBanner onRegisterAsTalent={() => navigate('/jadi-talent')} />
-
-      {/* Reviews and Ratings of UNSIL & Tasik local residents */}
+      <HowItWorks />
+      <RecommendedTalents onViewTalent={handleViewTalent} />
+      <SafetySection onLearnMore={() => navigate('/keamanan')} />
       <Testimonials />
-
-      {/* Network Dot SVG Map region density list */}
       <CoverageArea onSelectArea={handleSelectArea} />
-
-      {/* Interactive FAQ list accordion */}
       <FAQSection />
-
-      {/* Bottom Conversion Area */}
       <FinalCTA
         onFindService={handleViewAllServices}
         onJoinAsTalent={() => navigate('/jadi-talent')}
