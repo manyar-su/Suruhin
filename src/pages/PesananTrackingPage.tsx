@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ArrowLeft, MapPin, CheckCircle, ShieldAlert, Navigation, 
   HelpCircle, Star, Phone, MessageSquare, AlertTriangle, KeyRound, 
@@ -48,13 +48,14 @@ export function PesananTrackingPage({ bookingId, subPage = 'detail', navigate }:
   const [lostSync, setLostSync] = useState(false);
 
   // Simulated GPS position of the talent
-  const meetingLat = booking?.meetingLatitude ?? -7.3305;
-  const meetingLon = booking?.meetingLongitude ?? 108.2206;
-  const startLat = meetingLat - 0.015; // start about 1.8km away
-  const startLon = meetingLon - 0.012;
+  const meetingLat = booking?.meetingLatitude ?? null;
+  const meetingLon = booking?.meetingLongitude ?? null;
+  const startLat = meetingLat !== null ? meetingLat - 0.015 : null;
+  const startLon = meetingLon !== null ? meetingLon - 0.012 : null;
+  const meetingPointReady = meetingLat !== null && meetingLon !== null;
 
-  const [talentLat, setTalentLat] = useState(startLat);
-  const [talentLon, setTalentLon] = useState(startLon);
+  const [talentLat, setTalentLat] = useState<number | null>(startLat);
+  const [talentLon, setTalentLon] = useState<number | null>(startLon);
   const [travelProgress, setTravelProgress] = useState(0); // 0 to 100%
 
   // Simulated Chat Box Modal state
@@ -79,6 +80,10 @@ export function PesananTrackingPage({ bookingId, subPage = 'detail', navigate }:
 
   // Calculate distance & ETA based on current coordinates
   const calculateSimulatedDistance = () => {
+    if (meetingLat === null || meetingLon === null || talentLat === null || talentLon === null) {
+      return 0;
+    }
+
     // Distance in KM
     const R = 6371;
     const dLat = (meetingLat - talentLat) * (Math.PI / 180);
@@ -105,6 +110,9 @@ export function PesananTrackingPage({ bookingId, subPage = 'detail', navigate }:
   // Simulated continuous GPS travel loop
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
+    if (!meetingPointReady || startLat === null || startLon === null) {
+      return;
+    }
     
     if (booking?.status === 'TALENT_ON_THE_WAY') {
       interval = setInterval(() => {
@@ -143,7 +151,19 @@ export function PesananTrackingPage({ bookingId, subPage = 'detail', navigate }:
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [booking?.status]);
+  }, [booking?.status, meetingLat, meetingLon, meetingPointReady, startLat, startLon]);
+
+  useEffect(() => {
+    if (!meetingPointReady || startLat === null || startLon === null) {
+      return;
+    }
+
+    if (booking?.status === 'PAID' || booking?.status === 'TALENT_ACCEPTED' || booking?.status === 'TALENT_PREPARING') {
+      setTalentLat(startLat);
+      setTalentLon(startLon);
+      setTravelProgress(0);
+    }
+  }, [booking?.status, meetingPointReady, startLat, startLon]);
 
   // Update Status state & add status history
   const updateStatus = (newStatus: BookingStatus, notesText?: string) => {
@@ -153,15 +173,16 @@ export function PesananTrackingPage({ bookingId, subPage = 'detail', navigate }:
     const list = getBookings();
     const idx = list.findIndex(b => b.id === booking.id);
     
-    if (idx > -1) {
-      list[idx].status = newStatus;
+      if (idx > -1) {
+        list[idx].status = newStatus;
       
-      // Update timestamps based on transition milestones
-      if (newStatus === 'TALENT_ON_THE_WAY') {
-        list[idx].talentStartedJourneyAt = new Date().toISOString();
-        addNotification(
-          'Talent Mulai Perjalanan',
-          `Rizky Pratama sedang dalam perjalanan menuju lokasi Anda. Estimasi tiba: ${etaMinutes} menit.`,
+        // Update timestamps based on transition milestones
+        if (newStatus === 'TALENT_ON_THE_WAY') {
+          list[idx].talentStartedJourneyAt = new Date().toISOString();
+          list[idx].trackingStartedAt = new Date().toISOString();
+          addNotification(
+            'Talent Mulai Perjalanan',
+            `Rizky Pratama sedang dalam perjalanan menuju lokasi Anda. Estimasi tiba: ${etaMinutes} menit.`,
           'info'
         );
       } else if (newStatus === 'TALENT_ARRIVED') {
@@ -181,21 +202,50 @@ export function PesananTrackingPage({ bookingId, subPage = 'detail', navigate }:
         );
       } else if (newStatus === 'COMPLETED') {
         list[idx].actualEndTime = new Date().toISOString();
+        list[idx].trackingStoppedAt = new Date().toISOString();
         addNotification(
           'Layanan Selesai Sempurna',
           'Dana escrow telah dilepaskan ke saldo talent. Terima kasih atas pesanan Anda!',
           'completed'
         );
+      } else if (newStatus === 'CANCELLED') {
+        list[idx].trackingStoppedAt = new Date().toISOString();
       }
 
       saveBookings(list);
       setBookings(list);
 
       // Add audit history log
-      addStatusHistory(booking.id, previousStatus, newStatus, activeRole, talentLat, talentLon, notesText);
+      addStatusHistory(booking.id, previousStatus, newStatus, activeRole, talentLat ?? undefined, talentLon ?? undefined, notesText);
 
       setSuccessToast(`Status pesanan diperbarui menjadi: ${newStatus.replace(/_/g, ' ')}`);
       setTimeout(() => setSuccessToast(''), 3000);
+    }
+  };
+
+  const handleMeetingPointChange = (point: { latitude: number; longitude: number; address?: string }) => {
+    if (!booking) return;
+
+    const nextBookings = getBookings();
+    const targetIndex = nextBookings.findIndex((item) => item.id === booking.id);
+    if (targetIndex === -1) return;
+
+    nextBookings[targetIndex] = {
+      ...nextBookings[targetIndex],
+      meetingLatitude: point.latitude,
+      meetingLongitude: point.longitude,
+      meetingAddress: point.address || nextBookings[targetIndex].meetingAddress || nextBookings[targetIndex].location,
+      meetingPlaceName: point.address || nextBookings[targetIndex].meetingPlaceName || 'Titik Temu Dipilih di Peta',
+      meetingType: nextBookings[targetIndex].meetingType || 'CUSTOM_LOCATION',
+    };
+
+    saveBookings(nextBookings);
+    setBookings(nextBookings);
+
+    if (booking.status !== 'TALENT_ON_THE_WAY' && booking.status !== 'TALENT_NEARBY' && booking.status !== 'TALENT_ARRIVED') {
+      setTalentLat(point.latitude - 0.015);
+      setTalentLon(point.longitude - 0.012);
+      setTravelProgress(0);
     }
   };
 
@@ -336,8 +386,9 @@ export function PesananTrackingPage({ bookingId, subPage = 'detail', navigate }:
               <LiveTrackingMap
                 booking={booking}
                 role={activeRole}
-                talentLoc={{ latitude: talentLat, longitude: talentLon }}
+                talentLoc={talentLat !== null && talentLon !== null ? { latitude: talentLat, longitude: talentLon } : null}
                 gpsStatus={gpsStatus}
+                onMeetingPointChange={handleMeetingPointChange}
               />
             </div>
 
@@ -458,9 +509,10 @@ export function PesananTrackingPage({ bookingId, subPage = 'detail', navigate }:
                       onClick={() => {
                         updateStatus('TALENT_ON_THE_WAY', 'Talent memulai rute perjalanan.');
                       }}
-                      className="w-full py-3.5 bg-[#FF6500] hover:bg-[#e05900] text-white font-extrabold text-xs rounded-xl cursor-pointer shadow-md active:scale-95 transition-all text-center uppercase tracking-wider"
+                      disabled={!meetingPointReady}
+                      className="w-full py-3.5 bg-[#FF6500] hover:bg-[#e05900] disabled:bg-slate-300 disabled:hover:bg-slate-300 text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:cursor-not-allowed shadow-md active:scale-95 transition-all text-center uppercase tracking-wider"
                     >
-                      🛵 Mulai Perjalanan (Mulai Tracking)
+                      {meetingPointReady ? '🛵 Mulai Perjalanan (Mulai Tracking)' : 'Pilih Titik Temu di Peta Dulu'}
                     </button>
                   </div>
                 )}
@@ -484,6 +536,7 @@ export function PesananTrackingPage({ bookingId, subPage = 'detail', navigate }:
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => {
+                            if (meetingLat === null || meetingLon === null) return;
                             // Instantly move talent close to meeting point
                             setTalentLat(meetingLat - 0.0005);
                             setTalentLon(meetingLon - 0.0004);
