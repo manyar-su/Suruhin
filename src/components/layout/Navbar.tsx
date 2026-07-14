@@ -4,32 +4,20 @@ import { useScrollPosition } from '../../hooks/useScrollPosition';
 import { locations } from '../../data/locations';
 import { Container } from './Container';
 import { Button } from '../shared/Button';
+import { getStaticAssetPath } from '../../lib/assetPaths';
 
-// Premium Inline SVG Logo for Suruhin
 export function SuruhinLogo({ variant = 'dark', className = 'h-8' }: { variant?: 'dark' | 'light', className?: string }) {
   const logoColor = variant === 'dark' ? '#082B5C' : '#FFFFFF';
-  const orangeColor = '#FF6500';
 
   return (
     <div className={`flex items-center gap-2.5 ${className} select-none`}>
-      {/* Running 'S' Icon */}
-      <svg className="w-8 h-8 shrink-0" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100%" height="100%" rx="24" fill={logoColor} />
-        {/* Dynamic running trail */}
-        <circle cx="30" cy="50" r="6" fill={orangeColor} />
-        <rect x="25" y="60" width="16" height="6" rx="3" fill={orangeColor} />
-        <rect x="15" y="47" width="22" height="6" rx="3" fill={orangeColor} />
-        {/* Stylized "S" / Running Person */}
-        <path d="M45 35C45 32.2386 47.2386 30 50 30C52.7614 30 55 32.2386 55 35C55 37.7614 52.7614 40 50 40C47.2386 40 45 37.7614 45 35Z" fill="#FFFFFF" />
-        <path d="M68 45.5L58 43L55 53L63 65L58 68.5L48 57.5L42 53L35 59.5L39 68L33 71L28 59C27.5 56.5 29 53.5 31.5 52.5C34 51.5 41 46.5 41 46.5L47 38.5C48.5 36.5 51.5 35.5 54 36.5L66 41L68 45.5Z" fill="#FFFFFF" />
-        {/* Running Foot Forward */}
-        <path d="M53 62L46 72H53.5V62Z" fill={orangeColor} />
-      </svg>
-
-      {/* Suruhin Wordmark */}
-      <span className="font-sans font-black text-[2rem] leading-none tracking-[-0.04em] flex">
-        <span style={{ color: logoColor }}>suru</span>
-        <span style={{ color: orangeColor }}>hin</span>
+      <img
+        src={getStaticAssetPath('logo/logo.png')}
+        alt="Suruhin"
+        className="h-11 w-auto shrink-0 object-contain"
+      />
+      <span className="sr-only" style={{ color: logoColor }}>
+        Suruhin
       </span>
     </div>
   );
