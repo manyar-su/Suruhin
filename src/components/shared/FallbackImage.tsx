@@ -8,6 +8,9 @@ interface FallbackImageProps {
   categorySlug?: string;
   className?: string;
   gender?: 'Pria' | 'Wanita';
+  loading?: 'eager' | 'lazy';
+  decoding?: 'sync' | 'async' | 'auto';
+  fetchPriority?: 'high' | 'low' | 'auto';
 }
 
 export function FallbackImage({
@@ -17,6 +20,9 @@ export function FallbackImage({
   categorySlug = 'general',
   className = '',
   gender = 'Pria',
+  loading = 'lazy',
+  decoding = 'async',
+  fetchPriority = 'auto',
 }: FallbackImageProps) {
   const [hasError, setHasError] = useState(false);
 
@@ -25,7 +31,9 @@ export function FallbackImage({
       <img
         src={src}
         alt={alt}
-        loading="lazy"
+        loading={loading}
+        decoding={decoding}
+        fetchPriority={fetchPriority}
         onError={() => setHasError(true)}
         className={className}
       />

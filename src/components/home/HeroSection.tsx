@@ -112,6 +112,9 @@ export function HeroSection({ onSearch, onNavigate }: HeroSectionProps) {
               <img
                 src={getStaticAssetPath('jasa/hero-suruhin.webp')}
                 alt="Hero layanan Suruhin"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
                 className="h-full w-full object-cover"
               />
             </div>
@@ -182,6 +185,9 @@ export function HeroSection({ onSearch, onNavigate }: HeroSectionProps) {
               <img
                 src={getStaticAssetPath('jasa/hero-suruhin.webp')}
                 alt="Hero Suruhin"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
                 className="h-full w-full object-cover"
               />
             </div>
@@ -190,6 +196,9 @@ export function HeroSection({ onSearch, onNavigate }: HeroSectionProps) {
               <img
                 src={getStaticAssetPath('ui/hero-reference.webp')}
                 alt="Tampilan aplikasi Suruhin"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
                 className="h-full w-full rounded-[1.1rem] object-cover"
               />
             </div>
