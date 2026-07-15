@@ -1,5 +1,6 @@
 import { services } from '../../data/services';
 import { ServiceCard } from '../service/ServiceCard';
+import { getStaticAssetPath } from '../../lib/assetPaths';
 
 interface PopularServicesProps {
   onViewService: (slug: string) => void;
@@ -26,6 +27,14 @@ export function PopularServices({ onViewService, onViewAllServices }: PopularSer
           >
             Lihat semua
           </button>
+        </div>
+
+        <div className="mb-6 overflow-hidden rounded-[2rem] border border-white/85 bg-white shadow-[0_24px_60px_rgba(8,43,92,0.08)] sm:mb-8">
+          <img
+            src={getStaticAssetPath('ui/services-reference.webp')}
+            alt="Rekomendasi layanan Suruhin"
+            className="h-full max-h-[21rem] w-full object-cover object-top"
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">

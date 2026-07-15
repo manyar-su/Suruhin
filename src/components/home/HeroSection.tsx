@@ -108,6 +108,14 @@ export function HeroSection({ onSearch, onNavigate }: HeroSectionProps) {
               <span className="font-extrabold text-[#081a44]"> praktis</span>.
             </p>
 
+            <div className="mt-6 overflow-hidden rounded-[2rem] border border-white/85 bg-white/78 shadow-[0_24px_60px_rgba(8,43,92,0.1)] lg:hidden">
+              <img
+                src={getStaticAssetPath('jasa/hero-suruhin.webp')}
+                alt="Hero layanan Suruhin"
+                className="h-full w-full object-cover"
+              />
+            </div>
+
             <form
               onSubmit={handleSearchSubmit}
               className="mt-8 flex w-full max-w-4xl flex-col gap-3 rounded-[2rem] border border-white/85 bg-white/88 p-3 shadow-[0_30px_70px_rgba(8,43,92,0.1)] backdrop-blur md:flex-row md:items-center"
@@ -169,12 +177,20 @@ export function HeroSection({ onSearch, onNavigate }: HeroSectionProps) {
             </div>
           </div>
 
-          <div className="relative">
+          <div className="relative hidden lg:block">
             <div className="overflow-hidden rounded-[2.6rem] border border-white/80 bg-white/70 shadow-[0_32px_80px_rgba(8,43,92,0.14)]">
               <img
-                src={getStaticAssetPath('ui/hero-reference.png')}
+                src={getStaticAssetPath('jasa/hero-suruhin.webp')}
                 alt="Hero Suruhin"
                 className="h-full w-full object-cover"
+              />
+            </div>
+
+            <div className="absolute -bottom-8 left-6 hidden max-w-[17rem] overflow-hidden rounded-[1.6rem] border border-white/85 bg-white/95 p-3 shadow-[0_26px_60px_rgba(8,43,92,0.16)] lg:block">
+              <img
+                src={getStaticAssetPath('ui/hero-reference.webp')}
+                alt="Tampilan aplikasi Suruhin"
+                className="h-full w-full rounded-[1.1rem] object-cover"
               />
             </div>
           </div>

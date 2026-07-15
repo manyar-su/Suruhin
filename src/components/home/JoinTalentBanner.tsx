@@ -12,6 +12,12 @@ export function JoinTalentBanner({ onRegisterAsTalent }: JoinTalentBannerProps) 
     'Atur waktu sendiri',
     'Penghasilan transparan',
   ];
+  const activeTalents = [
+    getStaticAssetPath('talents/talent-sari-lestari.jpg'),
+    getStaticAssetPath('talents/talent-nadia-putri.jpg'),
+    getStaticAssetPath('talents/1.webp'),
+    getStaticAssetPath('talents/2.webp'),
+  ];
 
   return (
     <section className="bg-white py-14 md:py-16">
@@ -20,7 +26,7 @@ export function JoinTalentBanner({ onRegisterAsTalent }: JoinTalentBannerProps) 
           <div className="grid items-center gap-8 lg:grid-cols-[0.88fr_1.12fr]">
             <div className="relative h-full overflow-hidden">
               <img
-                src={getStaticAssetPath('ui/layout-reference.png')}
+                src={getStaticAssetPath('ui/layout-reference.webp')}
                 alt="Talent Suruhin"
                 className="h-full min-h-[320px] w-full object-cover"
               />
@@ -66,12 +72,11 @@ export function JoinTalentBanner({ onRegisterAsTalent }: JoinTalentBannerProps) 
 
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-2">
-                    {[1, 2, 3, 4].map((index) => (
+                    {activeTalents.map((avatar, index) => (
                       <img
-                        key={index}
-                        src={`https://images.unsplash.com/photo-${index === 1 ? '1494790108377-be9c29b29330' : index === 2 ? '1500648767791-00dcc994a43e' : index === 3 ? '1506794778202-cad84cf45f1d' : '1502685104226-ee32379fefbe'}?auto=format&fit=crop&w=80&h=80`}
-                        alt={`Talent aktif ${index}`}
-                        referrerPolicy="no-referrer"
+                        key={avatar}
+                        src={avatar}
+                        alt={`Talent aktif ${index + 1}`}
                         className="h-10 w-10 rounded-full border-2 border-white object-cover"
                       />
                     ))}
