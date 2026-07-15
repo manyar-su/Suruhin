@@ -92,7 +92,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data, error } = await query;
       if (error) throw new Error(error.message);
 
-      const rows = data || [];
+      const rows = (data || []) as Array<Record<string, unknown>>;
       const enriched = await Promise.all(
         rows.map(async (row) => {
           const counts = await countJobRelations(String(row.id));
