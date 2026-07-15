@@ -3,7 +3,7 @@ import { categories } from '../data/categories';
 import { ServiceCard } from '../components/service/ServiceCard';
 import { Container } from '../components/layout/Container';
 import { EmptyState } from '../components/shared/EmptyState';
-import { Search, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 import { useServiceCatalog } from '../hooks/useServiceCatalog';
 
 interface LayananListProps {
@@ -129,7 +129,6 @@ export function LayananList({ navigate, queryParams }: LayananListProps) {
         {/* Header Hero Section */}
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-[#FF6500] text-xs font-bold">
-            <Sparkles size={14} className="fill-[#FF6500]/10" />
             <span>Katalog Jasa Harian Tasikmalaya</span>
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#082B5C] tracking-tight">

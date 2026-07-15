@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Clock, MapPin, Shield, Star, Check, AlertCircle, Sparkles } from 'lucide-react';
+import { Clock, MapPin, Shield, Star, Check, AlertCircle } from 'lucide-react';
 import { TalentService, TalentServiceImage, TalentServiceSchedule } from '../../types';
 import { formatCurrency } from '../../lib/formatCurrency';
 
@@ -24,7 +24,7 @@ export function ServicePreviewStep({ data }: ServicePreviewStepProps) {
   return (
     <div className="space-y-6 text-left">
       <div className="bg-amber-50 border border-amber-100 p-3.5 rounded-2xl flex items-start gap-2 text-amber-800">
-        <Sparkles size={16} className="text-amber-500 shrink-0 mt-0.5" />
+        <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
         <p className="text-[10px] font-bold leading-normal">
           Ini adalah tampilan pratinjau (preview) interaktif. Anda dapat meninjau bagaimana jasa Anda akan terlihat oleh calon pelanggan, serta mensimulasikan perhitungan pendapatannya.
         </p>

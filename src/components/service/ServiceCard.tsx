@@ -17,8 +17,8 @@ export function ServiceCard({ service, onViewDetail, variant = 'default' }: Serv
 
   if (variant === 'featured') {
     return (
-      <div className="group flex h-full flex-col overflow-hidden rounded-[1.9rem] border border-white/85 bg-white shadow-[0_20px_55px_rgba(8,43,92,0.08)] transition hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(8,43,92,0.14)]">
-        <div className="relative aspect-[4/4.8] overflow-hidden bg-slate-100">
+      <div className="group flex h-full flex-col overflow-hidden rounded-[1.15rem] border border-white/85 bg-white shadow-[0_14px_34px_rgba(8,43,92,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(8,43,92,0.14)] sm:rounded-[1.9rem]">
+        <div className="relative aspect-[1/1.08] overflow-hidden bg-slate-100 sm:aspect-[4/4.8]">
           <FallbackImage
             src={getServiceImagePath(service.image)}
             alt={service.title}
@@ -33,7 +33,7 @@ export function ServiceCard({ service, onViewDetail, variant = 'default' }: Serv
               e.stopPropagation();
               setIsFavorite(!isFavorite);
             }}
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/88 text-gray-500 shadow-lg backdrop-blur transition hover:text-[#E5484D] cursor-pointer"
+            className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/88 text-gray-500 shadow-lg backdrop-blur transition hover:text-[#E5484D] cursor-pointer sm:right-4 sm:top-4 sm:h-10 sm:w-10"
             aria-label={isFavorite ? 'Hapus dari favorit' : 'Tambah ke favorit'}
           >
             <Heart
@@ -42,38 +42,39 @@ export function ServiceCard({ service, onViewDetail, variant = 'default' }: Serv
             />
           </button>
 
-          <span className="absolute left-4 top-4 rounded-full bg-white/92 px-3 py-1 text-[11px] font-black text-[#081a44] shadow-sm">
+          <span className="absolute left-2 top-2 max-w-[calc(100%-3rem)] truncate rounded-full bg-white/92 px-2.5 py-1 text-[9px] font-black text-[#081a44] shadow-sm sm:left-4 sm:top-4 sm:px-3 sm:text-[11px]">
             {service.categoryName}
           </span>
 
-          <div className="absolute inset-x-0 bottom-0 z-10 p-5 text-white">
+          <div className="absolute inset-x-0 bottom-0 z-10 p-3 text-white sm:p-5">
             <h3
               onClick={() => onViewDetail(service.slug)}
-              className="text-[1.75rem] font-black leading-[1.05] tracking-[-0.03em] cursor-pointer"
+              className="line-clamp-2 text-base font-black leading-[1.08] tracking-[-0.03em] cursor-pointer sm:text-[1.75rem]"
             >
               {service.title}
             </h3>
-            <p className="mt-2 max-w-[22rem] text-sm leading-relaxed text-white/84">
+            <p className="mt-1 line-clamp-2 max-w-[22rem] text-[10px] leading-relaxed text-white/84 sm:mt-2 sm:text-sm">
               {service.shortDescription}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 px-5 py-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-1.5 text-sm font-black text-[#081a44]">
-              <Star size={14} className="fill-[#ff9d12] stroke-[#ff9d12]" />
+        <div className="flex items-center justify-between gap-2 px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
+          <div className="min-w-0 space-y-1 sm:space-y-2">
+            <div className="flex items-center gap-1 text-xs font-black text-[#081a44] sm:gap-1.5 sm:text-sm">
+              <Star size={12} className="fill-[#ff9d12] stroke-[#ff9d12] sm:hidden" />
+              <Star size={14} className="hidden fill-[#ff9d12] stroke-[#ff9d12] sm:block" />
               <span>{service.rating.toFixed(1)}</span>
-              <span className="font-semibold text-slate-400">({service.reviewCount})</span>
+              <span className="truncate font-semibold text-slate-400">({service.reviewCount})</span>
             </div>
-            <div className="text-sm font-black text-[#081a44]">
+            <div className="text-[11px] font-black leading-tight text-[#081a44] sm:text-sm">
               Mulai <span className="text-[#ff7b00]">{formatCurrency(service.price)}</span>
             </div>
           </div>
 
           <button
             onClick={() => onViewDetail(service.slug)}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-[#fff4e7] px-4 text-sm font-black text-[#081a44] transition hover:bg-[#ffe1bf] cursor-pointer"
+            className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl bg-[#fff4e7] px-3 text-xs font-black text-[#081a44] transition hover:bg-[#ffe1bf] cursor-pointer sm:h-11 sm:rounded-2xl sm:px-4 sm:text-sm"
           >
             Detail
           </button>

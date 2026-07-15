@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, Sparkles, Filter, CheckCircle2 } from 'lucide-react';
+import { Search, Filter, CheckCircle2 } from 'lucide-react';
 import { locations } from '../data/locations';
 import { TalentCard } from '../components/talent/TalentCard';
 import { Container } from '../components/layout/Container';
@@ -151,7 +151,6 @@ export function TalentList({ navigate, queryParams }: TalentListProps) {
       <Container>
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50/90 border border-blue-200 text-blue-600 text-xs font-bold">
-            <Sparkles size={14} className="fill-blue-100" />
             <span>Kemitraan Mandiri Profesional</span>
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#082B5C] tracking-tight">
@@ -328,7 +327,7 @@ export function TalentList({ navigate, queryParams }: TalentListProps) {
         </div>
 
         {filteredTalents.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-8">
             {filteredTalents.map((talent) => (
               <TalentCard
                 key={talent.id}

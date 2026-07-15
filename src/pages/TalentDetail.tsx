@@ -3,7 +3,7 @@ import { Container } from '../components/layout/Container';
 import { FallbackImage } from '../components/shared/FallbackImage';
 import { Rating } from '../components/shared/Rating';
 import { BookingForm } from '../components/forms/BookingForm';
-import { MapPin, ShieldCheck, ArrowLeft, Star, Briefcase, Calendar, Sparkles, CheckCircle, Mail, AlertCircle } from 'lucide-react';
+import { MapPin, ShieldCheck, ArrowLeft, Star, Briefcase, Calendar, CheckCircle, Mail, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '../lib/formatCurrency';
 import { TalentReviewSystem } from '../components/talent/TalentReviewSystem';
 import { useTalentCatalog } from '../hooks/useTalentCatalog';
@@ -257,7 +257,6 @@ export function TalentDetail({ slug, navigate }: TalentDetailProps) {
             {/* Specialized Skill tags */}
             <div className="bg-white rounded-3xl border border-slate-100 p-6 md:p-8 shadow-sm space-y-4">
               <h3 className="text-base font-extrabold text-[#082B5C] flex items-center gap-1.5">
-                <Sparkles size={16} className="text-[#FF6500]" />
                 <span>Keahlian & Sertifikasi Khusus</span>
               </h3>
               <div className="flex flex-wrap gap-2">

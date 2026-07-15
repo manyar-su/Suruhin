@@ -1,13 +1,13 @@
 import { Container } from '../components/layout/Container';
 import { TalentRegistrationForm } from '../components/forms/TalentRegistrationForm';
-import { Sparkles, ShieldCheck, Heart, CircleDollarSign } from 'lucide-react';
+import { FileCheck, ShieldCheck, Heart, CircleDollarSign } from 'lucide-react';
 
 export function JadiTalent() {
   const stepsList = [
     {
       title: 'Isi Formulir',
       desc: 'Masukkan data diri, nomor WhatsApp aktif, foto KTP, serta pilih jenis jasa bantuan yang ingin Anda tawarkan.',
-      icon: Sparkles,
+      icon: FileCheck,
     },
     {
       title: 'Verifikasi & Wawancara',

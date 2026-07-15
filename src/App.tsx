@@ -53,6 +53,76 @@ export default function App() {
     }
   }, [currentRoute.page, currentRoute.path, isProtectedRoute]);
 
+  useEffect(() => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
+
+    let animationFrame = 0;
+    const handleScroll = () => {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        document.documentElement.style.setProperty('--parallax-soft', `${scrollY * -0.035}px`);
+        document.documentElement.style.setProperty('--parallax-deep', `${scrollY * -0.075}px`);
+      });
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
+
+    const selector = [
+      'main section',
+      'main h1',
+      'main h2',
+      'main h3',
+      'main p',
+      'main form',
+      'main [class*="rounded-3xl"]',
+      'main [class*="rounded-["]',
+      'main .grid > *',
+    ].join(',');
+
+    const timer = window.setTimeout(() => {
+      const elements = Array.from(document.querySelectorAll<HTMLElement>(selector))
+        .filter((element) => !element.closest('[data-no-reveal]') && element.offsetParent !== null)
+        .slice(0, 180);
+
+      elements.forEach((element, index) => {
+        element.classList.remove('is-visible');
+        element.classList.add('scroll-reveal');
+        element.style.setProperty('--reveal-delay', `${Math.min(index % 12, 11) * 45}ms`);
+      });
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.08, rootMargin: '0px 0px -8% 0px' }
+      );
+
+      elements.forEach((element) => observer.observe(element));
+
+      window.setTimeout(() => observer.disconnect(), 12000);
+    }, 80);
+
+    return () => window.clearTimeout(timer);
+  }, [currentRoute.path]);
+
   const handleLogout = () => {
     clearUserSession();
     setCurrentUser(null);
@@ -181,7 +251,13 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50/20 text-[#172033] font-sans antialiased">
+    <div className="app-shell relative isolate flex flex-col min-h-screen overflow-x-hidden bg-slate-50/20 text-[#172033] font-sans antialiased">
+      <div className="site-parallax-bg" aria-hidden="true">
+        <span className="site-parallax-orb site-parallax-orb-a" />
+        <span className="site-parallax-orb site-parallax-orb-b" />
+        <span className="site-parallax-thread" />
+      </div>
+
       {/* Universal Navigation Header */}
       <Navbar
         activePath={currentRoute.path}
@@ -200,12 +276,14 @@ export default function App() {
       />
 
       {/* Main Screen Content Stage */}
-      <main className="flex-grow">
+      <main className="relative z-10 flex-grow">
         {renderPage()}
       </main>
 
       {/* Universal Footer section */}
-      <Footer onNavigate={navigate} />
+      <div className="relative z-10">
+        <Footer onNavigate={navigate} />
+      </div>
 
       {/* Authentications modal popup trigger */}
       {authModalMode && (

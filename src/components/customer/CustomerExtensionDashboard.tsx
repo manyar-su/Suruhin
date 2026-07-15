@@ -12,7 +12,6 @@ import {
   AlertTriangle,
   Play,
   RotateCcw,
-  Sparkles,
   Award,
   ChevronDown,
   Navigation,
@@ -585,7 +584,7 @@ export function CustomerExtensionDashboard() {
 
               {activeBooking.status === 'EXTENSION_ACTIVE' && (
                 <div className="bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 animate-pulse">
-                  <Sparkles size={14} />
+                  <CheckCircle2 size={14} />
                   <span>🟢 Extension Active (+{activeBooking.overtimeMinutes}m)</span>
                 </div>
               )}
@@ -1089,7 +1088,7 @@ export function CustomerExtensionDashboard() {
             >
               <div className="flex justify-between items-start">
                 <h3 className="text-base font-black text-[#082B5C] flex items-center gap-1.5">
-                  <Sparkles size={18} className="text-yellow-500 animate-pulse" /> Berikan Tips Untuk Talent?
+                  <Award size={18} className="text-yellow-500" /> Berikan Tips Untuk Talent?
                 </h3>
                 <button onClick={() => setShowTipModal(false)} className="text-gray-400 hover:text-gray-600 font-extrabold">✕</button>
               </div>

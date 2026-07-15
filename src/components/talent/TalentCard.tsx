@@ -1,4 +1,4 @@
-import { ShieldCheck, MapPin, Star, Sparkles } from 'lucide-react';
+import { ShieldCheck, MapPin, Star } from 'lucide-react';
 import { Talent } from '../../types';
 import { FallbackImage } from '../shared/FallbackImage';
 import { getTalentAvatarPath } from '../../lib/assetPaths';
@@ -11,10 +11,7 @@ interface TalentCardProps {
 
 export function TalentCard({ talent, onViewProfile }: TalentCardProps) {
   return (
-    <div
-      className="group bg-white rounded-3xl border border-slate-100 hover:border-orange-500/10 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full overflow-hidden"
-      style={{ borderRadius: '20px' }} // Specified: "Border radius card 20px"
-    >
+    <div className="group bg-white border border-slate-100 hover:border-orange-500/10 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full overflow-hidden rounded-[18px] sm:rounded-[20px]">
       {/* Photo header */}
       <button
         type="button"
@@ -31,7 +28,7 @@ export function TalentCard({ talent, onViewProfile }: TalentCardProps) {
 
         {/* Availability Badge overlay */}
         <span
-          className={`absolute top-4.5 left-4.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1.5 backdrop-blur-md ${
+          className={`absolute top-2 left-2 sm:top-4.5 sm:left-4.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[8px] sm:text-[10px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1 sm:gap-1.5 backdrop-blur-md ${
             talent.available
               ? 'bg-emerald-50 border border-emerald-500/20 text-[#18A957]'
               : 'bg-gray-50 border border-gray-200 text-gray-500'
@@ -42,60 +39,63 @@ export function TalentCard({ talent, onViewProfile }: TalentCardProps) {
               talent.available ? 'bg-[#18A957] animate-pulse' : 'bg-gray-400'
             }`}
           />
-          {talent.available ? 'Tersedia Sekarang' : 'Sedang Sibuk'}
+          <span className="sm:hidden">{talent.available ? 'Tersedia' : 'Sibuk'}</span>
+          <span className="hidden sm:inline">{talent.available ? 'Tersedia Sekarang' : 'Sedang Sibuk'}</span>
         </span>
 
         {/* Verified Badge overlay */}
         {talent.verified && (
-          <span className="absolute top-4.5 right-4.5 bg-blue-50/90 backdrop-blur-xs border border-blue-200 p-1.5 rounded-xl text-blue-600 flex items-center justify-center shadow-md">
-            <ShieldCheck size={16} className="fill-blue-100" />
+          <span className="absolute top-2 right-2 sm:top-4.5 sm:right-4.5 bg-blue-50/90 backdrop-blur-xs border border-blue-200 p-1 sm:p-1.5 rounded-lg sm:rounded-xl text-blue-600 flex items-center justify-center shadow-md">
+            <ShieldCheck size={13} className="fill-blue-100 sm:hidden" />
+            <ShieldCheck size={16} className="hidden fill-blue-100 sm:block" />
           </span>
         )}
       </button>
 
       {/* Profile Details */}
-      <div className="p-5 flex-1 flex flex-col justify-between">
+      <div className="p-3 sm:p-5 flex-1 flex flex-col justify-between">
         <div>
           {/* Rating and orders */}
-          <div className="flex items-center justify-between mb-2.5">
-            <div className="flex items-center gap-0.5 text-xs font-bold text-[#172033]">
-              <Star size={12} className="fill-[#FF6500] stroke-[#FF6500]" />
+          <div className="flex items-center justify-between gap-1 mb-2 sm:mb-2.5">
+            <div className="min-w-0 flex items-center gap-0.5 text-[10px] sm:text-xs font-bold text-[#172033]">
+              <Star size={11} className="fill-[#FF6500] stroke-[#FF6500] sm:hidden" />
+              <Star size={12} className="hidden fill-[#FF6500] stroke-[#FF6500] sm:block" />
               <span>{talent.rating.toFixed(1)}</span>
-              <span className="text-gray-400 font-normal">({talent.reviewCount} ulasan)</span>
+              <span className="text-gray-400 font-normal truncate">({talent.reviewCount})</span>
             </div>
-            <span className="text-[10px] font-bold text-[#082B5C] bg-[#082B5C]/5 px-2.5 py-0.5 rounded-full">
-              {talent.completedOrders}+ Pesanan
+            <span className="shrink-0 text-[9px] sm:text-[10px] font-bold text-[#082B5C] bg-[#082B5C]/5 px-1.5 sm:px-2.5 py-0.5 rounded-full">
+              {talent.completedOrders}+
             </span>
           </div>
 
           {/* Name & verification text */}
           <h3
             onClick={() => onViewProfile(talent.slug)}
-            className="text-base font-extrabold text-[#082B5C] hover:text-[#FF6500] transition-colors leading-tight mb-1 flex items-center gap-1.5 cursor-pointer"
+            className="text-sm sm:text-base font-extrabold text-[#082B5C] hover:text-[#FF6500] transition-colors leading-tight mb-1 flex items-center gap-1.5 cursor-pointer"
           >
-            <span>{talent.name}</span>
+            <span className="line-clamp-2">{talent.name}</span>
           </h3>
 
           {/* Gender & Age */}
-          <p className="text-xs font-semibold text-gray-400 mb-2">
+          <p className="text-[10px] sm:text-xs font-semibold text-gray-400 mb-1.5 sm:mb-2">
             {talent.gender} • {talent.age} Tahun
           </p>
 
           {/* Location */}
-          <p className="text-xs text-[#172033]/70 flex items-center gap-1 mb-3.5">
-            <MapPin size={12} className="text-[#FF6500] shrink-0" />
+          <p className="text-[10px] sm:text-xs text-[#172033]/70 flex items-center gap-1 mb-2.5 sm:mb-3.5">
+            <MapPin size={11} className="text-[#FF6500] shrink-0 sm:hidden" />
+            <MapPin size={12} className="hidden text-[#FF6500] shrink-0 sm:block" />
             <span className="truncate">{talent.location}</span>
           </p>
 
           {/* Key Skills */}
-          <div className="flex flex-wrap gap-1.5 mb-4">
+          <div className="flex flex-wrap gap-1 mb-3 sm:gap-1.5 sm:mb-4">
             {talent.skills.slice(0, 3).map((skill, index) => (
               <span
                 key={index}
-                className="text-[10px] font-bold text-[#082B5C]/80 bg-[#F5F7FA] px-2 py-0.5 rounded-md flex items-center gap-0.5 border border-slate-100"
+                className={`text-[9px] sm:text-[10px] font-bold text-[#082B5C]/80 bg-[#F5F7FA] px-1.5 sm:px-2 py-0.5 rounded-md items-center border border-slate-100 max-w-full ${index === 2 ? 'hidden sm:flex' : 'flex'}`}
               >
-                <Sparkles size={8} className="text-[#FF6500]" />
-                {skill}
+                <span className="truncate">{skill}</span>
               </span>
             ))}
           </div>
@@ -104,9 +104,10 @@ export function TalentCard({ talent, onViewProfile }: TalentCardProps) {
         {/* Action Button */}
         <button
           onClick={() => onViewProfile(talent.slug)}
-          className="w-full bg-[#082B5C] hover:bg-[#FF6500] text-white font-bold text-xs py-3 rounded-xl transition-all duration-200 cursor-pointer text-center"
+          className="w-full bg-[#082B5C] hover:bg-[#FF6500] text-white font-bold text-[10px] sm:text-xs py-2.5 sm:py-3 rounded-xl transition-all duration-200 cursor-pointer text-center"
         >
-          Lihat Profil Lengkap
+          <span className="sm:hidden">Lihat Profil</span>
+          <span className="hidden sm:inline">Lihat Profil Lengkap</span>
         </button>
       </div>
     </div>

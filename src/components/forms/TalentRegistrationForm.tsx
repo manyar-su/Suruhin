@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, ArrowRight, ArrowLeft, Upload, FileCheck, CheckCircle2, ShieldCheck, Sparkles, AlertCircle } from 'lucide-react';
+import { Check, ArrowRight, ArrowLeft, Upload, FileCheck, CheckCircle2, ShieldCheck, UserCheck, AlertCircle } from 'lucide-react';
 import { services } from '../../data/services';
 import { locations } from '../../data/locations';
 import { Button } from '../shared/Button';
@@ -242,7 +242,7 @@ export function TalentRegistrationForm({ onSuccess }: TalentRegistrationFormProp
         {currentStep === 1 && (
           <div className="space-y-6">
             <h3 className="text-lg font-black text-[#082B5C] flex items-center gap-2">
-              <Sparkles size={18} className="text-[#FF6500]" /> Data Diri Calon Talent
+              <UserCheck size={18} className="text-[#FF6500]" /> Data Diri Calon Talent
             </h3>
             <p className="text-xs text-gray-400 -mt-2">Silakan lengkapi formulir pendaftaran kemitraan dengan jujur.</p>
 

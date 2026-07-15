@@ -1,6 +1,6 @@
 import { Container } from '../components/layout/Container';
 import { ContactForm } from '../components/forms/ContactForm';
-import { Mail, Phone, MapPin, Sparkles } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 
 export function Kontak() {
   return (
@@ -9,7 +9,6 @@ export function Kontak() {
         {/* Title */}
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-[#FF6500] text-xs font-bold">
-            <Sparkles size={14} className="fill-[#FF6500]/10" />
             <span>Kontak & Hubungi Kami</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-[#082B5C] tracking-tight">

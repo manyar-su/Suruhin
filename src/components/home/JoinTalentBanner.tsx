@@ -1,4 +1,4 @@
-import { CheckCircle, Sparkles } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { Button } from '../shared/Button';
 import { getStaticAssetPath } from '../../lib/assetPaths';
 
@@ -28,7 +28,6 @@ export function JoinTalentBanner({ onRegisterAsTalent }: JoinTalentBannerProps) 
 
             <div className="px-6 pb-8 pt-2 sm:px-8 lg:px-10">
               <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#ff9f12] shadow-sm">
-                <Sparkles size={14} />
                 Peluang Jadi Talent
               </span>
 

@@ -273,7 +273,7 @@ export function getServiceSubCategories(categoryId?: string): ServiceSubCategory
       { id: 'sub-2-19', categoryId: 'cat-2', name: 'Teman Seminar', slug: 'teman-seminar', icon: 'FileSpreadsheet', description: 'Menghadiri seminar bersama.', sortOrder: 19, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       { id: 'sub-2-20', categoryId: 'cat-2', name: 'Teman Event', slug: 'teman-event', icon: 'PartyPopper', description: 'Teman berpartisipasi di festival.', sortOrder: 20, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       { id: 'sub-2-21', categoryId: 'cat-2', name: 'Teman Networking', icon: 'Shuffle', slug: 'teman-network', description: 'Teman mencari relasi profesional.', sortOrder: 21, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      { id: 'sub-2-22', categoryId: 'cat-2', name: 'Teman Buka Puasa', icon: 'Sparkles', slug: 'teman-bukber', description: 'Teman bukber saat Ramadhan.', sortOrder: 22, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'sub-2-22', categoryId: 'cat-2', name: 'Teman Buka Puasa', icon: 'Users', slug: 'teman-bukber', description: 'Teman bukber saat Ramadhan.', sortOrder: 22, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       { id: 'sub-2-23', categoryId: 'cat-2', name: 'Teman Nongkrong', slug: 'teman-nongkrong', icon: 'MessagesSquare', description: 'Kawan mengobrol santai malam hari.', sortOrder: 23, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
 
       // Category 3: Titip & Belanja (cat-3)
@@ -286,7 +286,7 @@ export function getServiceSubCategories(categoryId?: string): ServiceSubCategory
       { id: 'sub-3-7', categoryId: 'cat-3', name: 'Titip Antre', slug: 'titip-antre', icon: 'Clock', description: 'Mewakili Anda dalam barisan antrean.', sortOrder: 7, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
 
       // Category 4: Rumah Tangga (cat-4)
-      { id: 'sub-4-1', categoryId: 'cat-4', name: 'Bersih Rumah', slug: 'bersih-rumah', icon: 'Sparkles', description: 'Sapu, pel, cuci piring, beres-beres.', sortOrder: 1, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'sub-4-1', categoryId: 'cat-4', name: 'Bersih Rumah', slug: 'bersih-rumah', icon: 'Home', description: 'Sapu, pel, cuci piring, beres-beres.', sortOrder: 1, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       { id: 'sub-4-2', categoryId: 'cat-4', name: 'Cuci Kendaraan', slug: 'cuci-kendaraan', icon: 'Droplets', description: 'Cuci motor atau mobil di rumah Anda.', sortOrder: 2, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       { id: 'sub-4-3', categoryId: 'cat-4', name: 'Potong Rumput', slug: 'potong-rumput', icon: 'Scissors', description: 'Rapikan rumput liar pekarangan.', sortOrder: 3, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       { id: 'sub-4-4', categoryId: 'cat-4', name: 'Rapikan Gudang', slug: 'rapikan-gudang', icon: 'BoxSelect', description: 'Kemas dan rapikan barang lama.', sortOrder: 4, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
@@ -364,7 +364,7 @@ export function getServiceSubCategories(categoryId?: string): ServiceSubCategory
       { id: 'sub-12-1', categoryId: 'cat-12', name: 'Antar Grooming', slug: 'pet-grooming', icon: 'Droplets', description: 'Antar hewan kesayangan mandi.', sortOrder: 1, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       { id: 'sub-12-2', categoryId: 'cat-12', name: 'Pet Sitting', slug: 'pet-sitting', icon: 'Heart', description: 'Menjaga hewan di rumah saat keluar.', sortOrder: 2, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       { id: 'sub-12-3', categoryId: 'cat-12', name: 'Dog Walking', slug: 'dog-walking', icon: 'Footprints', description: 'Mengajak anjing berjalan-jalan sore.', sortOrder: 3, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      { id: 'sub-12-4', categoryId: 'cat-12', name: 'Teman Jalan Hewan', slug: 'teman-jalan-pet', icon: 'Sparkles', description: 'Bermain dan menemani hewan bosan.', sortOrder: 4, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'sub-12-4', categoryId: 'cat-12', name: 'Teman Jalan Hewan', slug: 'teman-jalan-pet', icon: 'Dog', description: 'Bermain dan menemani hewan bosan.', sortOrder: 4, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       { id: 'sub-12-5', categoryId: 'cat-12', name: 'Antar Dokter Hewan', slug: 'pet-doctor', icon: 'Activity', description: 'Bantu antar periksa ke vet.', sortOrder: 5, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
 
       // Category 13: Lansia & Keluarga (cat-13)
