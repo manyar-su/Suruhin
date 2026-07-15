@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Send, CheckCircle2 } from 'lucide-react';
 import { Button } from '../shared/Button';
 import { firstValidationError, validateEmail, validatePhone, validateRequiredText } from '../../lib/validation/forms';
+import { generateSupportMessage, generateWhatsAppUrl } from '../../lib/whatsapp';
 
 export function ContactForm() {
   const [name, setName] = useState('');
@@ -32,8 +33,17 @@ export function ContactForm() {
 
     setIsSubmitting(true);
 
-    // Simulate submission
+    const whatsappMessage = generateSupportMessage({
+      name,
+      email,
+      phone,
+      subject,
+      message,
+    });
+    const whatsappUrl = generateWhatsAppUrl(whatsappMessage);
+
     setTimeout(() => {
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
       setIsSubmitted(true);
       setIsSubmitting(false);
       setName('');

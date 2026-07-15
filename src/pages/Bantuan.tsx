@@ -3,9 +3,11 @@ import { faqs } from '../data/faq';
 import { Container } from '../components/layout/Container';
 import { ContactForm } from '../components/forms/ContactForm';
 import { HelpCircle, Search, Mail, Phone, MessageSquarePlus, MapPin } from 'lucide-react';
+import { generateSupportMessage, generateWhatsAppUrl } from '../lib/whatsapp';
 
 export function Bantuan() {
   const [searchQuery, setSearchQuery] = useState('');
+  const supportWhatsAppUrl = generateWhatsAppUrl(generateSupportMessage());
 
   // Live filter FAQ questions
   const filteredFaqs = faqs.filter(
@@ -89,7 +91,7 @@ export function Bantuan() {
               
               <div className="space-y-3.5 text-xs text-gray-300">
                 <a
-                  href="https://wa.me/6282298511930"
+                  href={supportWhatsAppUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-2.5 hover:text-[#FF6500] transition-colors"

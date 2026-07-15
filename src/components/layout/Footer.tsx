@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Instagram, Youtube, Send, Check } from 'lucide-react';
 import { Container } from './Container';
 import { SuruhinLogo } from './Navbar';
+import { generateSupportMessage, generateWhatsAppUrl } from '../../lib/whatsapp';
 
 interface FooterProps {
   onNavigate: (path: string) => void;
@@ -10,6 +11,7 @@ interface FooterProps {
 export function Footer({ onNavigate }: FooterProps) {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
+  const supportWhatsAppUrl = generateWhatsAppUrl(generateSupportMessage());
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,7 +137,7 @@ export function Footer({ onNavigate }: FooterProps) {
             <h4 className="text-base font-extrabold text-white mb-4">Hubungi Kami</h4>
             <div className="space-y-3.5 text-sm text-gray-300">
               <a
-                href="https://wa.me/6282298511930"
+                href={supportWhatsAppUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-start gap-2.5 hover:text-[#FF6500] transition-colors"

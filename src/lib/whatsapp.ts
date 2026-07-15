@@ -13,6 +13,30 @@ export function generateWhatsAppUrl(message: string): string {
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
 
+export function generateSupportMessage(options?: {
+  name?: string;
+  email?: string;
+  phone?: string;
+  subject?: string;
+  message?: string;
+}): string {
+  const name = options?.name?.trim() || '-';
+  const email = options?.email?.trim() || '-';
+  const phone = options?.phone?.trim() || '-';
+  const subject = options?.subject?.trim() || 'Bantuan Suruhin';
+  const message = options?.message?.trim() || 'Saya membutuhkan bantuan dari Tim Suruhin.';
+
+  return `Halo Suruhin, saya membutuhkan bantuan.
+
+Nama: ${name}
+Email: ${email}
+Nomor WhatsApp: ${phone}
+Topik: ${subject}
+Pesan: ${message}
+
+Mohon dibantu. Terima kasih.`;
+}
+
 export interface BookingWhatsAppPayload {
   orderId: string;
   customerName: string;
