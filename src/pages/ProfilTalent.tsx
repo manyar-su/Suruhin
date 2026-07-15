@@ -8,6 +8,7 @@ import { TalentExtensionDashboard } from '../components/talent/TalentExtensionDa
 import { CustomerExtensionDashboard } from '../components/customer/CustomerExtensionDashboard';
 import { AdminExtensionDashboard } from '../components/admin/AdminExtensionDashboard';
 import { motion, AnimatePresence } from 'motion/react';
+import { getTalentAvatarPath } from '../lib/assetPaths';
 import {
   User,
   DollarSign,
@@ -552,7 +553,7 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
             <div className="relative group">
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#082B5C]/5 border-2 border-[#082B5C]/10 flex items-center justify-center overflow-hidden relative">
                 <img
-                  src={currentUser.avatar.startsWith('http') || currentUser.avatar.startsWith('data:') ? currentUser.avatar : `/avatars/${currentUser.avatar}`}
+                  src={getTalentAvatarPath(currentUser.avatar, currentUser.name)}
                   alt={currentUser.name}
                   onError={(e) => {
                     // Fallback to initial
@@ -671,7 +672,7 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
                   <div className="text-center space-y-3">
                     <div className="w-24 h-24 rounded-2xl overflow-hidden mx-auto border-4 border-slate-50 shadow-sm bg-slate-50 relative group">
                       <img
-                        src={currentUser.avatar.startsWith('http') || currentUser.avatar.startsWith('data:') ? currentUser.avatar : `/avatars/${currentUser.avatar}`}
+                        src={getTalentAvatarPath(currentUser.avatar, currentUser.name)}
                         alt={currentUser.name}
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=082B5C&color=fff`;

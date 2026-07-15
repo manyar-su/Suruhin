@@ -7,6 +7,7 @@ import { generateBookingMessage, generateWhatsAppUrl } from '../../lib/whatsapp'
 import { Button } from '../shared/Button';
 import { FallbackImage } from '../shared/FallbackImage';
 import { useTalentCatalog } from '../../hooks/useTalentCatalog';
+import { getTalentAvatarPath } from '../../lib/assetPaths';
 
 interface BookingFormProps {
   service: Service;
@@ -312,7 +313,7 @@ export function BookingForm({ service, selectedTalentSlug, onSuccess }: BookingF
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-white border border-slate-200 overflow-hidden shrink-0 shadow-sm">
                         <FallbackImage
-                          src={t.avatar.startsWith('http') || t.avatar.startsWith('data:') ? t.avatar : `/avatars/${t.avatar}`}
+                          src={getTalentAvatarPath(t.avatar, t.name)}
                           alt={t.name}
                           type="talent"
                           gender={t.gender}

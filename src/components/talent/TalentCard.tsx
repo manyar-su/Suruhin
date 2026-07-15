@@ -1,6 +1,7 @@
 import { ShieldCheck, MapPin, Star, Sparkles } from 'lucide-react';
 import { Talent } from '../../types';
 import { FallbackImage } from '../shared/FallbackImage';
+import { getTalentAvatarPath } from '../../lib/assetPaths';
 
 interface TalentCardProps {
   talent: Talent;
@@ -15,9 +16,13 @@ export function TalentCard({ talent, onViewProfile }: TalentCardProps) {
       style={{ borderRadius: '20px' }} // Specified: "Border radius card 20px"
     >
       {/* Photo header */}
-      <div className="relative aspect-square overflow-hidden bg-slate-50">
+      <button
+        type="button"
+        onClick={() => onViewProfile(talent.slug)}
+        className="relative aspect-square overflow-hidden bg-slate-50 cursor-pointer text-left"
+      >
         <FallbackImage
-          src={talent.avatar.startsWith('http') || talent.avatar.startsWith('data:') ? talent.avatar : `/avatars/${talent.avatar}`}
+          src={getTalentAvatarPath(talent.avatar, talent.name)}
           alt={talent.name}
           type="talent"
           gender={talent.gender}
@@ -46,7 +51,7 @@ export function TalentCard({ talent, onViewProfile }: TalentCardProps) {
             <ShieldCheck size={16} className="fill-blue-100" />
           </span>
         )}
-      </div>
+      </button>
 
       {/* Profile Details */}
       <div className="p-5 flex-1 flex flex-col justify-between">

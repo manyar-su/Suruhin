@@ -15,3 +15,19 @@ export function getStaticAssetPath(path: string) {
   }
   return `/assets/${path.replace(/^assets\//, '')}`;
 }
+
+export function getTalentAvatarPath(avatar: string | undefined, name: string) {
+  if (!avatar) {
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=082B5C&color=fff&bold=true`;
+  }
+
+  if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('data:') || avatar.startsWith('/')) {
+    return avatar;
+  }
+
+  if (avatar.startsWith('assets/')) {
+    return getStaticAssetPath(avatar);
+  }
+
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=082B5C&color=fff&bold=true`;
+}

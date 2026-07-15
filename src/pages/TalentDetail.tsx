@@ -8,6 +8,7 @@ import { formatCurrency } from '../lib/formatCurrency';
 import { TalentReviewSystem } from '../components/talent/TalentReviewSystem';
 import { useTalentCatalog } from '../hooks/useTalentCatalog';
 import { useServiceCatalog } from '../hooks/useServiceCatalog';
+import { getTalentAvatarPath } from '../lib/assetPaths';
 
 interface TalentDetailProps {
   slug: string;
@@ -27,7 +28,7 @@ export function TalentDetail({ slug, navigate }: TalentDetailProps) {
   const supportedServices = useMemo(() => {
     if (!talent) return [];
     return services.filter((s) => talent.services.includes(s.slug));
-  }, [talent]);
+  }, [services, talent]);
 
   // Selected booking service state
   const [selectedServiceSlug, setSelectedServiceSlug] = useState(() => {
@@ -42,7 +43,7 @@ export function TalentDetail({ slug, navigate }: TalentDetailProps) {
 
   const activeService = useMemo(() => {
     return services.find((s) => s.slug === selectedServiceSlug);
-  }, [selectedServiceSlug]);
+  }, [selectedServiceSlug, services]);
 
   // Combined real-time rating states updated by the TalentReviewSystem
   const [averageRating, setAverageRating] = useState(() => talent?.rating || 0);
@@ -88,7 +89,7 @@ export function TalentDetail({ slug, navigate }: TalentDetailProps) {
               {/* Photo */}
               <div className="w-28 h-28 rounded-3xl overflow-hidden bg-slate-100 border-4 border-slate-100 shadow-md shrink-0 relative">
                 <FallbackImage
-                  src={talent.avatar.startsWith('http') || talent.avatar.startsWith('data:') ? talent.avatar : `/avatars/${talent.avatar}`}
+                  src={getTalentAvatarPath(talent.avatar, talent.name)}
                   alt={talent.name}
                   type="talent"
                   gender={talent.gender}

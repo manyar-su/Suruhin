@@ -4,7 +4,7 @@ import { useScrollPosition } from '../../hooks/useScrollPosition';
 import { locations } from '../../data/locations';
 import { Container } from './Container';
 import { Button } from '../shared/Button';
-import { getStaticAssetPath } from '../../lib/assetPaths';
+import { getStaticAssetPath, getTalentAvatarPath } from '../../lib/assetPaths';
 
 export function SuruhinLogo({ variant = 'dark', className = 'h-8' }: { variant?: 'dark' | 'light', className?: string }) {
   const logoColor = variant === 'dark' ? '#082B5C' : '#FFFFFF';
@@ -170,7 +170,7 @@ export function Navbar({
                   >
                     <div className="w-5 h-5 rounded-md overflow-hidden border border-[#082B5C]/10 bg-slate-100 shrink-0">
                       <img
-                        src={currentUser.avatar.startsWith('http') || currentUser.avatar.startsWith('data:') ? currentUser.avatar : `/avatars/${currentUser.avatar}`}
+                        src={getTalentAvatarPath(currentUser.avatar, currentUser.name)}
                         alt={currentUser.name}
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=082B5C&color=fff`;
