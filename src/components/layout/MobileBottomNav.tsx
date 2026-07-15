@@ -1,9 +1,10 @@
 import { BriefcaseBusiness, CircleHelp, Grid2x2, Home, Search, User } from 'lucide-react';
-import type { Talent } from '../../types';
+import type { CustomerProfile, Talent } from '../../types';
 
 interface MobileBottomNavProps {
   activePath: string;
   currentUser?: Talent | null;
+  currentCustomer?: CustomerProfile | null;
   onNavigate: (path: string) => void;
   onOpenMenu: () => void;
 }
@@ -11,6 +12,7 @@ interface MobileBottomNavProps {
 export function MobileBottomNav({
   activePath,
   currentUser,
+  currentCustomer,
   onNavigate,
   onOpenMenu,
 }: MobileBottomNavProps) {
@@ -21,6 +23,8 @@ export function MobileBottomNav({
     { label: 'Bantuan', path: '/bantuan', icon: CircleHelp, action: () => onNavigate('/bantuan') },
     currentUser
       ? { label: 'Profil', path: '/profil-talent', icon: User, action: () => onNavigate('/profil-talent') }
+      : currentCustomer
+      ? { label: 'Akun', path: '/dashboard/customer', icon: User, action: () => onNavigate('/dashboard/customer') }
       : { label: 'Menu', path: '__menu__', icon: Grid2x2, action: onOpenMenu },
   ];
 

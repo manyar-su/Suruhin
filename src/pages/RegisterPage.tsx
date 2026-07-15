@@ -13,7 +13,7 @@ export function RegisterPage({ mode, navigate }: RegisterPageProps) {
     return (
       <div className="min-h-screen bg-slate-50/50 py-24">
         <Container>
-          <CustomerRegistrationForm onSuccess={() => navigate('/talent?available=1&verified=1')} />
+          <CustomerRegistrationForm onSuccess={() => navigate('/dashboard/customer')} />
         </Container>
       </div>
     );

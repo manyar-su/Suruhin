@@ -33,6 +33,9 @@ import { CustomerJobsPage } from './pages/CustomerJobsPage';
 import { CustomerJobCreatePage } from './pages/CustomerJobCreatePage';
 import { CustomerJobDetailPage } from './pages/CustomerJobDetailPage';
 import { TalentApplicationsPage } from './pages/TalentApplicationsPage';
+import { CustomerDashboard } from './pages/CustomerDashboard';
+import { clearCurrentCustomerProfile, getCurrentCustomerProfile } from './lib/customerProfile';
+import type { CustomerProfile } from './types';
 
 export default function App() {
   const { currentRoute, navigate } = useNavigation();
@@ -41,6 +44,9 @@ export default function App() {
   
   const [currentUser, setCurrentUser] = useState<Talent | null>(() => {
     return getCurrentSessionUser();
+  });
+  const [currentCustomer, setCurrentCustomer] = useState<CustomerProfile | null>(() => {
+    return getCurrentCustomerProfile();
   });
 
   const protectedPages = useMemo(
@@ -67,6 +73,7 @@ export default function App() {
     if (user && isProtectedRoute) {
       touchUserSession();
     }
+    setCurrentCustomer(getCurrentCustomerProfile());
   }, [currentRoute.page, currentRoute.path, isProtectedRoute]);
 
   useEffect(() => {
@@ -180,7 +187,9 @@ export default function App() {
 
   const handleLogout = () => {
     clearUserSession();
+    clearCurrentCustomerProfile();
     setCurrentUser(null);
+    setCurrentCustomer(null);
     navigate('/');
   };
 
@@ -257,7 +266,7 @@ export default function App() {
       case 'register-talent':
         return <RegisterPage mode="talent" navigate={navigate} />;
       case 'dashboard-customer':
-        return <MvpDashboard role="customer" />;
+        return <CustomerDashboard navigate={navigate} onCustomerChange={setCurrentCustomer} />;
       case 'dashboard-customer-jobs':
         return <CustomerJobsPage navigate={navigate} />;
       case 'dashboard-customer-jobs-create':
@@ -346,6 +355,7 @@ export default function App() {
         }}
         onOpenAuth={(mode) => setAuthModalMode(mode)}
         currentUser={currentUser}
+        currentCustomer={currentCustomer}
         onLogout={handleLogout}
       />
 

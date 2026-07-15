@@ -24,7 +24,7 @@ export function SuruhinLogo({ variant = 'dark', className = 'h-8' }: { variant?:
   );
 }
 
-import { Talent } from '../../types';
+import { CustomerProfile, Talent } from '../../types';
 
 interface NavbarProps {
   activePath: string;
@@ -33,6 +33,7 @@ interface NavbarProps {
   onLocationChange: (loc: string) => void;
   onOpenAuth: (mode: 'login' | 'register') => void;
   currentUser?: Talent | null;
+  currentCustomer?: CustomerProfile | null;
   onLogout?: () => void;
 }
 
@@ -43,6 +44,7 @@ export function Navbar({
   onLocationChange,
   onOpenAuth,
   currentUser,
+  currentCustomer,
   onLogout,
 }: NavbarProps) {
   const scrollY = useScrollPosition();
@@ -72,7 +74,7 @@ export function Navbar({
     { name: 'Jadi Talent', path: '/jadi-talent' },
     { name: 'Keamanan', path: '/keamanan' },
     { name: 'Bantuan', path: '/bantuan' },
-    ...(currentUser ? [{ name: 'Dashboard', path: '/profil-talent' }] : []),
+    ...(currentUser ? [{ name: 'Dashboard', path: '/profil-talent' }] : currentCustomer ? [{ name: 'Dashboard', path: '/dashboard/customer' }] : []),
   ];
 
   return (
@@ -181,6 +183,28 @@ export function Navbar({
                       />
                     </div>
                     <span className="max-w-[90px] truncate text-left">{currentUser.name.split(' ')[0]}</span>
+                  </button>
+                  <button
+                    onClick={onLogout}
+                    className="text-xs font-bold text-red-500 hover:text-red-700 px-2 py-1 transition-colors cursor-pointer"
+                  >
+                    Keluar
+                  </button>
+                </div>
+              ) : currentCustomer ? (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => onNavigate('/dashboard/customer')}
+                    className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-black rounded-xl transition-all border cursor-pointer ${
+                      activePath === '/dashboard/customer'
+                        ? 'bg-[#082B5C] text-white border-[#082B5C]'
+                        : 'bg-[#F5F7FA] border-slate-100 text-[#082B5C] hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-[#082B5C]/10 bg-[#082B5C] text-[9px] text-white">
+                      {currentCustomer.fullName.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="max-w-[90px] truncate text-left">{currentCustomer.fullName.split(' ')[0]}</span>
                   </button>
                   <button
                     onClick={onLogout}
@@ -320,6 +344,28 @@ export function Navbar({
                     <span className="truncate">Keluar Sesi</span>
                   </button>
                 </>
+              ) : currentCustomer ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onNavigate('/dashboard/customer');
+                    }}
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-[#082B5C] text-white text-[11px] font-black rounded-lg bg-[#082B5C] hover:bg-[#061e40] transition-all cursor-pointer shadow-xs truncate"
+                  >
+                    <User size={12} className="shrink-0" />
+                    <span className="truncate">Akun ({currentCustomer.fullName.split(' ')[0]})</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onLogout?.();
+                    }}
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-red-200 text-red-500 text-[11px] font-black rounded-lg bg-red-50 hover:bg-red-100 transition-all cursor-pointer truncate"
+                  >
+                    <span className="truncate">Keluar Sesi</span>
+                  </button>
+                </>
               ) : (
                 <>
                   <button
@@ -355,6 +401,7 @@ export function Navbar({
       <MobileBottomNav
         activePath={activePath}
         currentUser={currentUser}
+        currentCustomer={currentCustomer}
         onNavigate={onNavigate}
         onOpenMenu={() => setIsMobileMenuOpen(true)}
       />

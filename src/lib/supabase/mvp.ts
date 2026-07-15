@@ -376,6 +376,35 @@ export async function updateMvpTalentProfile(
   return { ok: true, data: null };
 }
 
+export async function updateMvpCustomerProfile(
+  id: string,
+  patch: {
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+  }
+): Promise<MvpResult<null>> {
+  const { client, error } = getClientOrError();
+  if (!client) return { ok: false, error };
+
+  const updatePayload: Record<string, string> = {};
+  if (typeof patch.fullName === 'string') updatePayload.full_name = patch.fullName.trim();
+  if (typeof patch.email === 'string') updatePayload.email = patch.email.trim();
+  if (typeof patch.phone === 'string') updatePayload.phone = patch.phone.trim();
+  if (typeof patch.address === 'string') updatePayload.address = patch.address.trim();
+  if (typeof patch.city === 'string') updatePayload.city = patch.city.trim();
+
+  if (Object.keys(updatePayload).length === 0) {
+    return { ok: true, data: null };
+  }
+
+  const { error: updateError } = await client.from('customers').update(updatePayload).eq('id', id);
+  if (updateError) return { ok: false, error: updateError.message };
+  return { ok: true, data: null };
+}
+
 export async function updateMvpTalentAvatar(id: string, file: File): Promise<MvpResult<{ path: string }>> {
   try {
     const ext = getSafeExtension(file, 'jpg');
