@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Menu, X, ChevronDown, LogIn, UserPlus, User } from 'lucide-react';
+import { MapPin, X, ChevronDown, LogIn, UserPlus, User } from 'lucide-react';
 import { useScrollPosition } from '../../hooks/useScrollPosition';
 import { locations } from '../../data/locations';
 import { Container } from './Container';
 import { Button } from '../shared/Button';
 import { getStaticAssetPath, getTalentAvatarPath } from '../../lib/assetPaths';
+import { MobileBottomNav } from './MobileBottomNav';
 
 export function SuruhinLogo({ variant = 'dark', className = 'h-8' }: { variant?: 'dark' | 'light', className?: string }) {
   const logoColor = variant === 'dark' ? '#082B5C' : '#FFFFFF';
@@ -208,23 +209,13 @@ export function Navbar({
               {/* Location Badge */}
               <button
                 onClick={() => {
-                  // Toggle mobile menu and scroll to locations or open location choice
                   setIsMobileMenuOpen(true);
                   setIsLocationDropdownOpen(true);
                 }}
                 className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-[#082B5C] bg-[#F5F7FA] rounded-lg border border-gray-100"
               >
                 <MapPin size={12} className="text-[#FF6500]" />
-                <span className="truncate max-w-[80px]">{selectedLocation}</span>
-              </button>
-
-              {/* Hamburger Button */}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 text-[#082B5C] hover:bg-[#F5F7FA] rounded-xl transition-colors cursor-pointer"
-                aria-label="Toggle navigation menu"
-              >
-                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                <span className="truncate max-w-[110px]">{selectedLocation}</span>
               </button>
             </div>
           </div>
@@ -360,6 +351,13 @@ export function Navbar({
           </div>
         </div>
       )}
+
+      <MobileBottomNav
+        activePath={activePath}
+        currentUser={currentUser}
+        onNavigate={onNavigate}
+        onOpenMenu={() => setIsMobileMenuOpen(true)}
+      />
     </>
   );
 }

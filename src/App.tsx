@@ -5,6 +5,7 @@ import { Footer } from './components/layout/Footer';
 import { Modal } from './components/shared/Modal';
 import { AuthForm } from './components/forms/AuthForm';
 import { Button } from './components/shared/Button';
+import { PwaInstallPrompt } from './components/pwa/PwaInstallPrompt';
 import { Talent } from './types';
 import { clearUserSession, getCurrentSessionUser, touchUserSession, updateStoredUser, upsertCustomTalent } from './lib/authSession';
 
@@ -285,7 +286,7 @@ export default function App() {
   };
 
   return (
-    <div className="app-shell relative isolate flex flex-col min-h-screen overflow-x-hidden bg-slate-50/20 text-[#172033] font-sans antialiased">
+    <div className="app-shell relative isolate flex flex-col min-h-screen overflow-x-hidden bg-slate-50/20 pb-[calc(5.8rem+env(safe-area-inset-bottom))] text-[#172033] font-sans antialiased lg:pb-0">
       <div className="site-parallax-bg" aria-hidden="true">
         <span className="site-parallax-orb site-parallax-orb-a" />
         <span className="site-parallax-orb site-parallax-orb-b" />
@@ -318,6 +319,8 @@ export default function App() {
       <div className="relative z-10">
         <Footer onNavigate={navigate} />
       </div>
+
+      <PwaInstallPrompt />
 
       {/* Authentications modal popup trigger */}
       {authModalMode && (

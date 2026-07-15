@@ -139,33 +139,6 @@ export function LayananList({ navigate, queryParams }: LayananListProps) {
           </p>
         </div>
 
-        <div className="mb-6 grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
-          <div className="rounded-[28px] border border-slate-100 bg-white px-5 py-4 shadow-sm">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#FF6500]">Flow pengguna</p>
-            <h2 className="mt-2 text-lg font-black text-[#082B5C]">Mulai dari katalog publik, lanjut ke dashboard saat sudah siap memesan</h2>
-            <p className="mt-2 text-sm text-[#172033]/70 leading-relaxed">
-              Halaman ini difokuskan untuk eksplorasi jasa. Detail sesi, tracking, dan pengelolaan order dipisahkan ke area akun agar pengalaman publik tetap ringan.
-            </p>
-          </div>
-          <div className="rounded-[28px] border border-[#082B5C]/10 bg-[#082B5C] px-5 py-4 text-white shadow-sm">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#FFB36A]">Trust signal</p>
-            <div className="mt-3 grid grid-cols-3 gap-3 text-center">
-              <div>
-                <div className="text-lg font-black text-[#FF6500]">4.9</div>
-                <div className="text-[10px] uppercase tracking-wider text-white/70">Rating</div>
-              </div>
-              <div>
-                <div className="text-lg font-black text-[#FF6500]">{filteredServices.length}</div>
-                <div className="text-[10px] uppercase tracking-wider text-white/70">Tersaring</div>
-              </div>
-              <div>
-                <div className="text-lg font-black text-[#FF6500]">Escrow</div>
-                <div className="text-[10px] uppercase tracking-wider text-white/70">Aktif</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm mb-10 space-y-6">
           <div className="flex flex-col md:flex-row items-stretch gap-4">
             <div className="flex-1 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 flex items-center gap-3">

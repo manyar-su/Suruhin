@@ -26,7 +26,6 @@ export function ServiceCard({ service, onViewDetail, variant = 'default' }: Serv
             categorySlug={service.category}
             className="h-full w-full object-contain bg-slate-50 p-1.5 transition duration-500 group-hover:scale-[1.02] sm:object-cover sm:bg-transparent sm:p-0 sm:group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#091a3f] via-[#091a3f]/8 to-transparent" />
 
           <button
             onClick={(e) => {
@@ -45,22 +44,23 @@ export function ServiceCard({ service, onViewDetail, variant = 'default' }: Serv
           <span className="absolute left-2 top-2 max-w-[calc(100%-3rem)] truncate rounded-full bg-white/92 px-2.5 py-1 text-[9px] font-black text-[#081a44] shadow-sm sm:left-4 sm:top-4 sm:px-3 sm:text-[11px]">
             {service.categoryName}
           </span>
+        </div>
 
-          <div className="absolute inset-x-0 bottom-0 z-10 p-3 text-white sm:p-5">
+        <div className="flex flex-1 flex-col gap-3 px-3 py-3 sm:px-5 sm:py-4">
+          <div className="min-w-0">
             <h3
               onClick={() => onViewDetail(service.slug)}
-              className="line-clamp-2 text-base font-black leading-[1.08] tracking-[-0.03em] cursor-pointer sm:text-[1.75rem]"
+              className="line-clamp-2 text-sm font-black leading-tight tracking-[-0.03em] text-[#082B5C] cursor-pointer sm:text-xl"
             >
               {service.title}
             </h3>
-            <p className="mt-1 line-clamp-2 max-w-[22rem] text-[10px] leading-relaxed text-white/84 sm:mt-2 sm:text-sm">
+            <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-[#172033]/68 sm:mt-2 sm:text-sm">
               {service.shortDescription}
             </p>
           </div>
-        </div>
 
-        <div className="flex items-center justify-between gap-2 px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
-          <div className="min-w-0 space-y-1 sm:space-y-2">
+          <div className="mt-auto flex items-center justify-between gap-2 sm:gap-3">
+            <div className="min-w-0 space-y-1 sm:space-y-2">
             <div className="flex items-center gap-1 text-xs font-black text-[#081a44] sm:gap-1.5 sm:text-sm">
               <Star size={12} className="fill-[#ff9d12] stroke-[#ff9d12] sm:hidden" />
               <Star size={14} className="hidden fill-[#ff9d12] stroke-[#ff9d12] sm:block" />
@@ -70,14 +70,15 @@ export function ServiceCard({ service, onViewDetail, variant = 'default' }: Serv
             <div className="text-[11px] font-black leading-tight text-[#081a44] sm:text-sm">
               Mulai <span className="text-[#ff7b00]">{formatCurrency(service.price)}</span>
             </div>
-          </div>
+            </div>
 
-          <button
-            onClick={() => onViewDetail(service.slug)}
-            className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl bg-[#fff4e7] px-3 text-xs font-black text-[#081a44] transition hover:bg-[#ffe1bf] cursor-pointer sm:h-11 sm:rounded-2xl sm:px-4 sm:text-sm"
-          >
-            Detail
-          </button>
+            <button
+              onClick={() => onViewDetail(service.slug)}
+              className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl bg-[#fff4e7] px-3 text-xs font-black text-[#081a44] transition hover:bg-[#ffe1bf] cursor-pointer sm:h-11 sm:rounded-2xl sm:px-4 sm:text-sm"
+            >
+              Detail
+            </button>
+          </div>
         </div>
       </div>
     );
