@@ -12,18 +12,10 @@ import {
   validatePhone,
   validateRequiredText,
 } from '../../lib/validation/forms';
-import { createMvpEntityId, registerMvpCustomer, uploadMvpPrivateFile } from '../../lib/supabase/mvp';
+import { createMvpEntityId, registerMvpCustomer } from '../../lib/supabase/mvp';
 
 interface CustomerRegistrationFormProps {
   onSuccess?: () => void;
-}
-
-function getFileExtension(file: File) {
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  if (ext && ['jpg', 'jpeg', 'png', 'pdf'].includes(ext)) return ext;
-  if (file.type === 'image/png') return 'png';
-  if (file.type === 'application/pdf') return 'pdf';
-  return 'jpg';
 }
 
 function getCityFromOcr(city: string, currentCity: string) {
@@ -141,9 +133,7 @@ export function CustomerRegistrationForm({ onSuccess }: CustomerRegistrationForm
     setOcrNotice('Membaca data KTP...');
 
     try {
-      const extension = getFileExtension(file);
-      await uploadMvpPrivateFile('customer-files', `customer/ktp/${entityId}/ktp.${extension}`, file, { upsert: true });
-      const parsed = await requestKtpOcr(file);
+      const parsed = await requestKtpOcr(file, { entityId, entityType: 'customer' });
       applyKtpFields(parsed);
       setOcrNotice('Data KTP berhasil diisi otomatis');
       window.alert('Data berhasil dibaca dari KTP. Mohon cek kembali sebelum disimpan.');
@@ -213,7 +203,7 @@ export function CustomerRegistrationForm({ onSuccess }: CustomerRegistrationForm
     });
 
     setIsSubmitting(false);
-    if ('error' in result) {
+    if (result.ok === false) {
       setFormError(result.error);
       return;
     }

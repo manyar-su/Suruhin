@@ -1,8 +1,13 @@
 import type { KtpParsedFields } from './ktp';
 
-export async function requestKtpOcr(file: File): Promise<KtpParsedFields> {
+export async function requestKtpOcr(
+  file: File,
+  options?: { entityId?: string; entityType?: 'customer' | 'talent' }
+): Promise<KtpParsedFields> {
   const formData = new FormData();
   formData.append('file', file);
+  if (options?.entityId) formData.append('entityId', options.entityId);
+  if (options?.entityType) formData.append('entityType', options.entityType);
 
   const response = await fetch('/api/ocr/ktp', {
     method: 'POST',

@@ -173,95 +173,86 @@ export async function uploadMvpPrivateFile(
   return path;
 }
 
-export async function registerMvpCustomer(input: MvpCustomerInput): Promise<MvpResult<{ id: string }>> {
-  const { client, error } = getClientOrError();
-  if (!client) return { ok: false, error };
-
-  const id = input.id || createMvpEntityId();
-
-  try {
-    const profileExt = input.profilePhoto ? getSafeExtension(input.profilePhoto, 'jpg') : 'jpg';
-    const ktpExt = input.ktpPhoto ? getSafeExtension(input.ktpPhoto, 'jpg') : 'jpg';
-    const profilePath = await uploadMvpPrivateFile('customer-files', `customer/profile/${id}/foto.${profileExt}`, input.profilePhoto);
-    const ktpPath = await uploadMvpPrivateFile('customer-files', `customer/ktp/${id}/ktp.${ktpExt}`, input.ktpPhoto);
-
-    const { error: insertError } = await client.from('customers').insert({
-      id,
-      full_name: input.fullName.trim(),
-      email: input.email.trim(),
-      phone: input.phone.trim(),
-      nik: input.nik.trim(),
-      birth_place: input.birthPlace.trim(),
-      birth_date: input.birthDate || null,
-      gender: input.gender.trim(),
-      address: input.address.trim(),
-      rt_rw: input.rtRw.trim(),
-      village: input.village.trim(),
-      district: input.district.trim(),
-      city: input.city,
-      religion: input.religion.trim(),
-      marital_status: input.maritalStatus.trim(),
-      occupation: input.occupation.trim(),
-      nationality: input.nationality.trim(),
-      profile_photo_path: profilePath || null,
-      ktp_path: ktpPath || null,
-    });
-
-    if (insertError) throw insertError;
-    return { ok: true, data: { id } };
-  } catch (insertError) {
-    return { ok: false, error: insertError instanceof Error ? insertError.message : 'Gagal menyimpan data customer.' };
+async function readApiResult<T>(response: Response, fallbackError: string): Promise<MvpResult<T>> {
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || !payload?.ok) {
+    return {
+      ok: false,
+      error: payload?.error || fallbackError,
+    };
   }
+
+  return {
+    ok: true,
+    data: payload.data as T,
+  };
+}
+
+export async function registerMvpCustomer(input: MvpCustomerInput): Promise<MvpResult<{ id: string }>> {
+  const id = input.id || createMvpEntityId();
+  const formData = new FormData();
+  formData.append('id', id);
+  formData.append('fullName', input.fullName);
+  formData.append('email', input.email);
+  formData.append('phone', input.phone);
+  formData.append('nik', input.nik);
+  formData.append('birthPlace', input.birthPlace);
+  formData.append('birthDate', input.birthDate);
+  formData.append('gender', input.gender);
+  formData.append('address', input.address);
+  formData.append('rtRw', input.rtRw);
+  formData.append('village', input.village);
+  formData.append('district', input.district);
+  formData.append('city', input.city);
+  formData.append('religion', input.religion);
+  formData.append('maritalStatus', input.maritalStatus);
+  formData.append('occupation', input.occupation);
+  formData.append('nationality', input.nationality);
+  if (input.profilePhoto) formData.append('profilePhoto', input.profilePhoto);
+  if (input.ktpPhoto) formData.append('ktpPhoto', input.ktpPhoto);
+
+  const response = await fetch('/api/register/customer', {
+    method: 'POST',
+    body: formData,
+  });
+
+  return readApiResult<{ id: string }>(response, 'Gagal menyimpan data customer.');
 }
 
 export async function registerMvpTalent(input: MvpTalentInput): Promise<MvpResult<{ id: string }>> {
-  const { client, error } = getClientOrError();
-  if (!client) return { ok: false, error };
-
   const id = input.id || createMvpEntityId();
+  const formData = new FormData();
+  formData.append('id', id);
+  formData.append('fullName', input.fullName);
+  formData.append('email', input.email);
+  formData.append('phone', input.phone);
+  formData.append('nik', input.nik);
+  formData.append('birthPlace', input.birthPlace);
+  formData.append('birthDate', input.birthDate);
+  formData.append('gender', input.gender);
+  formData.append('address', input.address);
+  formData.append('rtRw', input.rtRw);
+  formData.append('village', input.village);
+  formData.append('district', input.district);
+  formData.append('city', input.city);
+  formData.append('religion', input.religion);
+  formData.append('maritalStatus', input.maritalStatus);
+  formData.append('occupation', input.occupation);
+  formData.append('nationality', input.nationality);
+  formData.append('category', input.category);
+  formData.append('bio', input.bio);
+  formData.append('hobby', input.hobby);
+  formData.append('pricePerHour', String(input.pricePerHour));
+  if (input.profilePhoto) formData.append('profilePhoto', input.profilePhoto);
+  if (input.ktpPhoto) formData.append('ktpPhoto', input.ktpPhoto);
+  if (input.skckPhoto) formData.append('skckPhoto', input.skckPhoto);
 
-  try {
-    const profileExt = input.profilePhoto ? getSafeExtension(input.profilePhoto, 'jpg') : 'jpg';
-    const ktpExt = input.ktpPhoto ? getSafeExtension(input.ktpPhoto, 'jpg') : 'jpg';
-    const skckExt = input.skckPhoto ? getSafeExtension(input.skckPhoto, 'pdf') : 'pdf';
-    const profilePath = await uploadMvpPrivateFile('talent-files', `talent/profile/${id}/foto.${profileExt}`, input.profilePhoto);
-    const ktpPath = await uploadMvpPrivateFile('talent-files', `talent/ktp/${id}/ktp.${ktpExt}`, input.ktpPhoto);
-    const skckPath = await uploadMvpPrivateFile('talent-files', `talent/skck/${id}/skck.${skckExt}`, input.skckPhoto);
+  const response = await fetch('/api/register/talent', {
+    method: 'POST',
+    body: formData,
+  });
 
-    const { error: insertError } = await client.from('talents').insert({
-      id,
-      full_name: input.fullName.trim(),
-      email: input.email.trim(),
-      phone: input.phone.trim(),
-      nik: input.nik.trim(),
-      birth_place: input.birthPlace.trim(),
-      birth_date: input.birthDate || null,
-      gender: input.gender.trim(),
-      address: input.address.trim(),
-      rt_rw: input.rtRw.trim(),
-      village: input.village.trim(),
-      district: input.district.trim(),
-      city: input.city,
-      religion: input.religion.trim(),
-      marital_status: input.maritalStatus.trim(),
-      occupation: input.occupation.trim(),
-      nationality: input.nationality.trim(),
-      category: input.category,
-      bio: input.bio.trim(),
-      hobby: input.hobby.trim(),
-      price_per_hour: input.pricePerHour,
-      profile_photo_path: profilePath || null,
-      ktp_path: ktpPath || null,
-      skck_path: skckPath || null,
-      verification_status: 'pending',
-      is_available: false,
-    });
-
-    if (insertError) throw insertError;
-    return { ok: true, data: { id } };
-  } catch (insertError) {
-    return { ok: false, error: insertError instanceof Error ? insertError.message : 'Gagal menyimpan data talent.' };
-  }
+  return readApiResult<{ id: string }>(response, 'Gagal menyimpan data talent.');
 }
 
 export async function createMvpOrder(input: MvpOrderInput): Promise<MvpResult<{ id: string }>> {

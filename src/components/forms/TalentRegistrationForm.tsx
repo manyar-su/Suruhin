@@ -14,18 +14,10 @@ import {
   validateRequiredText,
   validateSelected,
 } from '../../lib/validation/forms';
-import { createMvpEntityId, registerMvpTalent, uploadMvpPrivateFile } from '../../lib/supabase/mvp';
+import { createMvpEntityId, registerMvpTalent } from '../../lib/supabase/mvp';
 
 interface TalentRegistrationFormProps {
   onSuccess?: () => void;
-}
-
-function getFileExtension(file: File) {
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  if (ext && ['jpg', 'jpeg', 'png', 'pdf'].includes(ext)) return ext;
-  if (file.type === 'image/png') return 'png';
-  if (file.type === 'application/pdf') return 'pdf';
-  return 'jpg';
 }
 
 function getCityFromOcr(city: string, currentCity: string) {
@@ -176,9 +168,7 @@ export function TalentRegistrationForm({ onSuccess }: TalentRegistrationFormProp
     setOcrNotice('Membaca data KTP...');
 
     try {
-      const extension = getFileExtension(file);
-      await uploadMvpPrivateFile('talent-files', `talent/ktp/${entityId}/ktp.${extension}`, file, { upsert: true });
-      const parsed = await requestKtpOcr(file);
+      const parsed = await requestKtpOcr(file, { entityId, entityType: 'talent' });
       applyKtpFields(parsed);
       setOcrNotice('Data KTP berhasil diisi otomatis');
       window.alert('Data berhasil dibaca dari KTP. Mohon cek kembali sebelum disimpan.');
@@ -300,7 +290,7 @@ export function TalentRegistrationForm({ onSuccess }: TalentRegistrationFormProp
     });
 
     setIsSubmitting(false);
-    if ('error' in result) {
+    if (result.ok === false) {
       setErrors({ submit: result.error });
       return;
     }

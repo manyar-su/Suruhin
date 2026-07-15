@@ -1,0 +1,96 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { readMultipartPayload } from '../_lib/multipart';
+import { assertUploadableFile, getSafeExtension, uploadPrivateBuffer } from '../_lib/mvpUpload';
+import { getSupabaseAdminClient } from '../_lib/supabaseAdmin';
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+function required(value: string | undefined, label: string) {
+  if (!value?.trim()) {
+    throw new Error(`${label} wajib diisi.`);
+  }
+  return value.trim();
+}
+
+function normalizeApiError(error: unknown) {
+  const message = error instanceof Error ? error.message : 'Gagal menyimpan data talent.';
+  if (message.includes('duplicate key')) return 'Data talent sudah terdaftar atau ID bentrok. Silakan coba lagi.';
+  if (message.includes('violates foreign key')) return 'Relasi data talent belum siap di database.';
+  return message;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ ok: false, error: 'Method not allowed' });
+  }
+
+  try {
+    const { fields, files } = await readMultipartPayload(req);
+    const id = required(fields.id, 'ID talent');
+    const profilePhoto = files.profilePhoto;
+    const ktpPhoto = files.ktpPhoto;
+    const skckPhoto = files.skckPhoto;
+
+    assertUploadableFile(profilePhoto, 'Foto profil');
+    assertUploadableFile(ktpPhoto, 'KTP');
+    assertUploadableFile(skckPhoto, 'SKCK');
+
+    const profileExt = getSafeExtension(profilePhoto, 'jpg');
+    const ktpExt = getSafeExtension(ktpPhoto, 'jpg');
+    const skckExt = getSafeExtension(skckPhoto, 'pdf');
+
+    const profilePath = await uploadPrivateBuffer('talent-files', `talent/profile/${id}/foto.${profileExt}`, profilePhoto, { upsert: true });
+    const ktpPath = await uploadPrivateBuffer('talent-files', `talent/ktp/${id}/ktp.${ktpExt}`, ktpPhoto, { upsert: true });
+    const skckPath = await uploadPrivateBuffer('talent-files', `talent/skck/${id}/skck.${skckExt}`, skckPhoto, { upsert: true });
+
+    const client = getSupabaseAdminClient();
+    const talentRow = {
+      id,
+      full_name: required(fields.fullName, 'Nama lengkap'),
+      email: required(fields.email, 'Email'),
+      phone: required(fields.phone, 'Nomor WhatsApp'),
+      nik: required(fields.nik, 'NIK'),
+      birth_place: required(fields.birthPlace, 'Tempat lahir'),
+      birth_date: required(fields.birthDate, 'Tanggal lahir'),
+      gender: required(fields.gender, 'Jenis kelamin'),
+      address: required(fields.address, 'Alamat lengkap'),
+      rt_rw: required(fields.rtRw, 'RT/RW'),
+      village: required(fields.village, 'Kelurahan/desa'),
+      district: required(fields.district, 'Kecamatan'),
+      city: required(fields.city, 'Kota'),
+      religion: required(fields.religion, 'Agama'),
+      marital_status: required(fields.maritalStatus, 'Status perkawinan'),
+      occupation: required(fields.occupation, 'Pekerjaan'),
+      nationality: (fields.nationality || 'WNI').trim(),
+      category: required(fields.category, 'Kategori talent'),
+      bio: (fields.bio || '').trim(),
+      hobby: (fields.hobby || '').trim(),
+      price_per_hour: Number(fields.pricePerHour || 0),
+      profile_photo_path: profilePath,
+      ktp_path: ktpPath,
+      skck_path: skckPath,
+      verification_status: 'pending',
+      is_available: false,
+    };
+    const { error } = await client.from('talents').insert(talentRow as never);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return res.status(200).json({
+      ok: true,
+      data: { id },
+    });
+  } catch (error) {
+    return res.status(400).json({
+      ok: false,
+      error: normalizeApiError(error),
+    });
+  }
+}

@@ -1,12 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { countFilledKtpFields, parseKtpText } from '../../src/lib/ocr/ktp';
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'application/pdf',
-]);
+import { readMultipartPayload } from '../_lib/multipart';
+import { assertUploadableFile, getSafeExtension, uploadPrivateBuffer } from '../_lib/mvpUpload';
 
 const DEFAULT_MODELS = [
   'gemini-2.0-flash',
@@ -19,63 +14,6 @@ export const config = {
     bodyParser: false,
   },
 };
-
-function getBoundary(contentType: string) {
-  const match = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
-  return match?.[1] || match?.[2] || '';
-}
-
-function splitMultipartBuffer(buffer: Buffer, boundary: string) {
-  const marker = Buffer.from(`--${boundary}`);
-  const segments: Buffer[] = [];
-  let start = buffer.indexOf(marker);
-
-  while (start !== -1) {
-    const next = buffer.indexOf(marker, start + marker.length);
-    if (next === -1) break;
-    segments.push(buffer.subarray(start + marker.length + 2, next - 2));
-    start = next;
-  }
-
-  return segments.filter((segment) => segment.length > 0);
-}
-
-async function readMultipartFile(req: VercelRequest) {
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-
-  const buffer = Buffer.concat(chunks);
-  const contentType = req.headers['content-type'] || '';
-  const boundary = getBoundary(contentType);
-
-  if (!boundary) {
-    throw new Error('Boundary multipart tidak ditemukan.');
-  }
-
-  const parts = splitMultipartBuffer(buffer, boundary);
-
-  for (const part of parts) {
-    const separatorIndex = part.indexOf(Buffer.from('\r\n\r\n'));
-    if (separatorIndex === -1) continue;
-
-    const headerText = part.subarray(0, separatorIndex).toString('utf8');
-    if (!/name="file"/i.test(headerText)) continue;
-
-    const mimeMatch = headerText.match(/Content-Type:\s*([^\r\n]+)/i);
-    const nameMatch = headerText.match(/filename="([^"]+)"/i);
-    const fileBuffer = part.subarray(separatorIndex + 4);
-
-    return {
-      name: nameMatch?.[1] || 'ktp-upload',
-      type: (mimeMatch?.[1] || '').trim(),
-      buffer: fileBuffer,
-    };
-  }
-
-  throw new Error('File KTP tidak ditemukan di request.');
-}
 
 async function callVisionOcr(baseUrl: string, apiKey: string, model: string, dataUrl: string) {
   const response = await fetch(`${baseUrl.replace(/\/$/, '')}/v1/chat/completions`, {
@@ -161,26 +99,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const file = await readMultipartFile(req);
+    const { fields: requestFields, files } = await readMultipartPayload(req);
+    const file = files.file;
+    assertUploadableFile(file, 'File KTP');
 
-    if (!ALLOWED_MIME_TYPES.has(file.type)) {
-      return res.status(400).json({
-        ok: false,
-        error: 'File harus berformat JPG, JPEG, PNG, atau PDF.',
-      });
-    }
+    const entityId = (requestFields.entityId || '').trim();
+    const entityType = (requestFields.entityType || '').trim();
 
-    if (file.buffer.length > MAX_FILE_SIZE) {
-      return res.status(400).json({
-        ok: false,
-        error: 'Ukuran file maksimal 5MB.',
-      });
+    if (entityId && (entityType === 'customer' || entityType === 'talent')) {
+      const bucket = entityType === 'customer' ? 'customer-files' : 'talent-files';
+      const extension = getSafeExtension(file, 'jpg');
+      const path = `${entityType}/ktp/${entityId}/ktp.${extension}`;
+      await uploadPrivateBuffer(bucket, path, file, { upsert: true });
     }
 
     const rawText = await extractOcrText(file);
-    const fields = parseKtpText(rawText);
+    const parsedFields = parseKtpText(rawText);
 
-    if (!fields.nik || countFilledKtpFields(fields) < 5) {
+    if (!parsedFields.nik || countFilledKtpFields(parsedFields) < 5) {
       return res.status(422).json({
         ok: false,
         error: 'Data KTP belum terbaca jelas. Silakan upload ulang foto yang lebih terang atau isi manual.',
@@ -189,7 +125,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({
       ok: true,
-      data: fields,
+      data: parsedFields,
       message: 'Data berhasil dibaca dari KTP. Mohon cek kembali sebelum disimpan.',
     });
   } catch (error) {
