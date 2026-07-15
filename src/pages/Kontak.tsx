@@ -36,7 +36,7 @@ export function Kontak() {
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Phone size={14} className="text-[#FF6500] shrink-0" />
-                  <span>+62 852-2300-0111</span>
+                  <span>082298511930</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Mail size={14} className="text-[#FF6500] shrink-0" />

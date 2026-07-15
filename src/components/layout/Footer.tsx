@@ -135,13 +135,13 @@ export function Footer({ onNavigate }: FooterProps) {
             <h4 className="text-base font-extrabold text-white mb-4">Hubungi Kami</h4>
             <div className="space-y-3.5 text-sm text-gray-300">
               <a
-                href="https://wa.me/6285223000111"
+                href="https://wa.me/6282298511930"
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-start gap-2.5 hover:text-[#FF6500] transition-colors"
               >
                 <Phone size={18} className="text-[#FF6500] shrink-0 mt-0.5" />
-                <span>+62 852-2300-0111 (WhatsApp Bantuan)</span>
+                <span>082298511930 (WhatsApp Bantuan)</span>
               </a>
               <a
                 href="mailto:support@suruhin.com"

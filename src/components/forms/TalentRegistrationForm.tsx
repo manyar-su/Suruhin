@@ -329,7 +329,7 @@ export function TalentRegistrationForm({ onSuccess }: TalentRegistrationFormProp
             <li><strong>Aktif Bekerja:</strong> Akun Anda diaktifkan dan siap menerima pesanan serta mulai menghasilkan rupiah harian.</li>
           </ol>
         </div>
-        <p className="text-[10px] text-gray-400">Butuh bantuan? Hubungi Tim Rekrutmen Suruhin via WhatsApp di +62 852-2300-0111.</p>
+        <p className="text-[10px] text-gray-400">Butuh bantuan? Hubungi Tim Rekrutmen Suruhin via WhatsApp di 082298511930.</p>
       </div>
     );
   }

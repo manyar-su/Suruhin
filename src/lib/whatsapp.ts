@@ -5,7 +5,7 @@ export function getWhatsAppNumber(): string {
     return envNumber.replace(/[^0-9]/g, '');
   }
   // Fallback Tasikmalaya local company official number
-  return '6285223000111';
+  return '6282298511930';
 }
 
 export function generateWhatsAppUrl(message: string): string {

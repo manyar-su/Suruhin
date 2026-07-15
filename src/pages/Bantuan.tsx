@@ -89,13 +89,13 @@ export function Bantuan() {
               
               <div className="space-y-3.5 text-xs text-gray-300">
                 <a
-                  href="https://wa.me/6285223000111"
+                  href="https://wa.me/6282298511930"
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-2.5 hover:text-[#FF6500] transition-colors"
                 >
                   <Phone size={14} className="text-[#FF6500]" />
-                  <span>WhatsApp Bantuan: +62 852-2300-0111</span>
+                  <span>WhatsApp Bantuan: 082298511930</span>
                 </a>
                 
                 <a

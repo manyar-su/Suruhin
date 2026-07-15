@@ -138,7 +138,7 @@ export function Keamanan() {
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5">
               <div className="flex items-center gap-3">
                 <Phone size={16} className="text-[#FF6500]" />
-                <span className="font-bold">WhatsApp Hotline Darurat: +62 852-2300-0111</span>
+                <span className="font-bold">WhatsApp Hotline Darurat: 082298511930</span>
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF6500]">Tim Operasional Siaga 24 Jam</span>
             </div>
