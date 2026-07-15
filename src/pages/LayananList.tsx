@@ -124,7 +124,7 @@ export function LayananList({ navigate, queryParams }: LayananListProps) {
   }, [combinedServices, activeCategory, searchQuery, selectedLocation, selectedPriceBand, sortBy]);
 
   return (
-    <div className="py-24 bg-slate-50/50 min-h-screen">
+    <div className="pb-24 pt-32 bg-slate-50/50 min-h-screen sm:py-24">
       <Container>
         {/* Header Hero Section */}
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
