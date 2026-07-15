@@ -70,15 +70,16 @@ export default function App() {
   }, [currentRoute.page, currentRoute.path, isProtectedRoute]);
 
   useEffect(() => {
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const isMobile = window.matchMedia('(max-width: 640px)').matches;
-    if (reduceMotion || isMobile) {
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mobileQuery = window.matchMedia('(max-width: 640px)');
+    let animationFrame = 0;
+    let isScrollBound = false;
+
+    const resetParallax = () => {
       document.documentElement.style.setProperty('--parallax-soft', '0px');
       document.documentElement.style.setProperty('--parallax-deep', '0px');
-      return;
-    }
+    };
 
-    let animationFrame = 0;
     const handleScroll = () => {
       cancelAnimationFrame(animationFrame);
       animationFrame = requestAnimationFrame(() => {
@@ -88,12 +89,36 @@ export default function App() {
       });
     };
 
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    const syncParallaxMode = () => {
+      const shouldDisableScrollParallax = reduceMotionQuery.matches || mobileQuery.matches;
+
+      if (shouldDisableScrollParallax) {
+        if (isScrollBound) {
+          window.removeEventListener('scroll', handleScroll);
+          isScrollBound = false;
+        }
+        cancelAnimationFrame(animationFrame);
+        resetParallax();
+        return;
+      }
+
+      if (!isScrollBound) {
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        isScrollBound = true;
+      }
+      handleScroll();
+    };
+
+    syncParallaxMode();
+    reduceMotionQuery.addEventListener('change', syncParallaxMode);
+    mobileQuery.addEventListener('change', syncParallaxMode);
 
     return () => {
       cancelAnimationFrame(animationFrame);
-      window.removeEventListener('scroll', handleScroll);
+      if (isScrollBound) window.removeEventListener('scroll', handleScroll);
+      reduceMotionQuery.removeEventListener('change', syncParallaxMode);
+      mobileQuery.removeEventListener('change', syncParallaxMode);
+      resetParallax();
     };
   }, []);
 
@@ -114,10 +139,17 @@ export default function App() {
       'main .grid > *',
     ].join(',');
 
+    let observer: IntersectionObserver | null = null;
+
     const timer = window.setTimeout(() => {
       const elements = Array.from(document.querySelectorAll<HTMLElement>(selector))
         .filter((element) => !element.closest('[data-no-reveal]') && element.offsetParent !== null)
         .slice(0, 180);
+
+      if (!('IntersectionObserver' in window)) {
+        elements.forEach((element) => element.classList.add('is-visible'));
+        return;
+      }
 
       elements.forEach((element, index) => {
         element.classList.remove('is-visible');
@@ -125,7 +157,7 @@ export default function App() {
         element.style.setProperty('--reveal-delay', `${Math.min(index % 12, 11) * 45}ms`);
       });
 
-      const observer = new IntersectionObserver(
+      observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
@@ -138,11 +170,12 @@ export default function App() {
       );
 
       elements.forEach((element) => observer.observe(element));
-
-      window.setTimeout(() => observer.disconnect(), 12000);
     }, 80);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      observer?.disconnect();
+    };
   }, [currentRoute.path]);
 
   const handleLogout = () => {
