@@ -158,18 +158,6 @@ export function CustomerRegistrationForm({ onSuccess }: CustomerRegistrationForm
       validateRequiredText(formData.fullName, 'Nama lengkap wajib diisi.'),
       validateEmail(formData.email),
       validatePhone(formData.phone),
-      validateRequiredText(formData.nik, 'NIK wajib diisi.'),
-      validateRequiredText(formData.birthPlace, 'Tempat lahir wajib diisi.'),
-      validateRequiredText(formData.birthDate, 'Tanggal lahir wajib diisi.'),
-      validateRequiredText(formData.gender, 'Jenis kelamin wajib diisi.'),
-      validateRequiredText(formData.address, 'Alamat lengkap wajib diisi.'),
-      validateRequiredText(formData.rtRw, 'RT/RW wajib diisi.'),
-      validateRequiredText(formData.village, 'Kelurahan/desa wajib diisi.'),
-      validateRequiredText(formData.district, 'Kecamatan wajib diisi.'),
-      validateRequiredText(formData.religion, 'Agama wajib diisi.'),
-      validateRequiredText(formData.maritalStatus, 'Status perkawinan wajib diisi.'),
-      validateRequiredText(formData.occupation, 'Pekerjaan wajib diisi.'),
-      validateRequiredText(formData.nationality, 'Kewarganegaraan wajib diisi.'),
       validateMvpImageUpload(formData.profilePhoto, 'Foto profil'),
       validateMvpUpload(formData.ktpPhoto, 'KTP')
     );

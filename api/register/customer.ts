@@ -16,10 +16,21 @@ function required(value: string | undefined, label: string) {
   return value.trim();
 }
 
+function optionalText(value: string | undefined) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
+function optionalDate(value: string | undefined) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
 function normalizeApiError(error: unknown) {
   const message = error instanceof Error ? error.message : 'Gagal menyimpan data customer.';
   if (message.includes('duplicate key')) return 'Data customer sudah terdaftar atau ID bentrok. Silakan coba lagi.';
   if (message.includes('violates foreign key')) return 'Relasi data customer belum siap di database.';
+  if (message.includes('invalid input syntax') && message.includes('date')) return 'Format tanggal lahir tidak valid. Kosongkan atau gunakan format yang benar.';
   return message;
 }
 
@@ -50,19 +61,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       full_name: required(fields.fullName, 'Nama lengkap'),
       email: required(fields.email, 'Email'),
       phone: required(fields.phone, 'Nomor WhatsApp'),
-      nik: required(fields.nik, 'NIK'),
-      birth_place: required(fields.birthPlace, 'Tempat lahir'),
-      birth_date: required(fields.birthDate, 'Tanggal lahir'),
-      gender: required(fields.gender, 'Jenis kelamin'),
-      address: required(fields.address, 'Alamat lengkap'),
-      rt_rw: required(fields.rtRw, 'RT/RW'),
-      village: required(fields.village, 'Kelurahan/desa'),
-      district: required(fields.district, 'Kecamatan'),
-      city: required(fields.city, 'Kota'),
-      religion: required(fields.religion, 'Agama'),
-      marital_status: required(fields.maritalStatus, 'Status perkawinan'),
-      occupation: required(fields.occupation, 'Pekerjaan'),
-      nationality: (fields.nationality || 'WNI').trim(),
+      nik: optionalText(fields.nik),
+      birth_place: optionalText(fields.birthPlace),
+      birth_date: optionalDate(fields.birthDate),
+      gender: optionalText(fields.gender),
+      address: optionalText(fields.address) || '-',
+      rt_rw: optionalText(fields.rtRw),
+      village: optionalText(fields.village),
+      district: optionalText(fields.district),
+      city: optionalText(fields.city) || 'Kota Tasikmalaya',
+      religion: optionalText(fields.religion),
+      marital_status: optionalText(fields.maritalStatus),
+      occupation: optionalText(fields.occupation),
+      nationality: optionalText(fields.nationality) || 'WNI',
       profile_photo_path: profilePath,
       ktp_path: ktpPath,
     };
