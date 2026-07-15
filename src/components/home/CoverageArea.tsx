@@ -1,4 +1,4 @@
-import { MapPin, Globe, Compass, ArrowUpRight } from 'lucide-react';
+import { MapPin, ExternalLink, Navigation, ArrowUpRight } from 'lucide-react';
 import { locations } from '../../data/locations';
 import { SectionHeader } from '../shared/SectionHeader';
 
@@ -7,6 +7,9 @@ interface CoverageAreaProps {
 }
 
 export function CoverageArea({ onSelectArea }: CoverageAreaProps) {
+  const prianganMapUrl =
+    'https://www.openstreetmap.org/export/embed.html?bbox=107.65%2C-7.65%2C108.75%2C-6.75&layer=mapnik&marker=-7.3506%2C108.2172';
+
   return (
     <section className="py-16 bg-white relative overflow-hidden border-b border-slate-50">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -46,85 +49,55 @@ export function CoverageArea({ onSelectArea }: CoverageAreaProps) {
             </div>
           </div>
 
-          {/* Right Column - Premium Stylized DOT MAP representation */}
+          {/* Right Column - Real map */}
           <div className="lg:col-span-6 flex items-center justify-center relative">
             <div className="relative w-full max-w-md bg-gradient-to-br from-[#082B5C] to-slate-900 rounded-3xl p-8 text-white overflow-hidden shadow-2xl border border-white/5 min-h-[380px] flex flex-col justify-between">
-              
-              {/* Grid Background Overlay */}
-              <div className="absolute inset-0 opacity-5 mix-blend-overlay">
-                <svg width="100%" height="100%">
-                  <pattern id="map-grid" width="15" height="15" patternUnits="userSpaceOnUse">
-                    <path d="M 15 0 L 0 0 0 15" fill="none" stroke="white" strokeWidth="1" />
-                  </pattern>
-                  <rect width="100%" height="100%" fill="url(#map-grid)" />
-                </svg>
-              </div>
-
-              {/* Header inside Map Box */}
               <div className="relative z-1 flex items-center justify-between">
                 <span className="text-[10px] font-bold text-[#FF6500] uppercase tracking-wider flex items-center gap-1">
-                  <Compass size={12} className="animate-spin" style={{ animationDuration: '8s' }} /> Priangan Timur Hub
+                  <Navigation size={12} /> Priangan Timur Hub
                 </span>
                 <span className="text-[9px] font-bold bg-white/10 px-2 py-0.5 rounded-full border border-white/15 flex items-center gap-1">
-                  <Globe size={10} className="text-[#18A957]" /> Live Density
+                  <MapPin size={10} className="text-[#18A957]" /> Peta Nyata
                 </span>
               </div>
 
-              {/* Stylized Dots Map Design */}
-              <div className="relative w-full h-44 my-auto flex items-center justify-center z-1">
-                {/* SVG Connecting lines */}
-                <svg className="absolute inset-0 w-full h-full text-[#FF6500]/25 stroke-current fill-none">
-                  <path d="M 200 80 L 120 120 L 280 120 Z M 200 80 L 200 150 L 120 120 Z M 280 120 L 200 150 M 120 120 L 150 40 L 200 80" strokeWidth="1.5" strokeDasharray="3,3" />
-                </svg>
-
-                {/* Dot 1: Bandung (Left top) */}
-                <div className="absolute top-10 left-[25%] flex flex-col items-center">
-                  <div className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" />
-                  <span className="text-[8px] font-bold text-white/50 mt-1">Bandung</span>
-                </div>
-
-                {/* Dot 2: Garut (Left mid) */}
-                <div className="absolute top-28 left-[15%] flex flex-col items-center">
-                  <div className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" />
-                  <span className="text-[8px] font-bold text-white/50 mt-1">Garut</span>
-                </div>
-
-                {/* Dot 3: Tasikmalaya Kota (Center Hub - Large) */}
-                <div className="absolute top-16 left-[50%] -translate-x-1/2 flex flex-col items-center">
-                  <div className="relative flex items-center justify-center">
-                    <div className="absolute w-8 h-8 rounded-full bg-[#FF6500]/30 animate-ping" />
-                    <div className="w-4 h-4 rounded-full bg-[#FF6500] border-2 border-white shadow-lg" />
-                  </div>
-                  <span className="text-[10px] font-black text-white mt-1.5 bg-[#FF6500] px-2 py-0.5 rounded-md shadow-md">
-                    TASIKMALAYA
-                  </span>
-                </div>
-
-                {/* Dot 4: Ciamis (Right top) */}
-                <div className="absolute top-24 right-[15%] flex flex-col items-center">
-                  <div className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" />
-                  <span className="text-[8px] font-bold text-white/50 mt-1">Ciamis</span>
-                </div>
-
-                {/* Dot 5: Banjar (Right bottom) */}
-                <div className="absolute bottom-6 right-[25%] flex flex-col items-center">
-                  <div className="w-2.5 h-2.5 rounded-full bg-white" />
-                  <span className="text-[8px] font-bold text-white/50 mt-1">Banjar</span>
-                </div>
+              <div className="relative z-1 my-5 overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/8 shadow-inner">
+                <iframe
+                  title="Peta wilayah operasional Suruhin"
+                  src={prianganMapUrl}
+                  className="h-56 w-full"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-[#082B5C]/25 to-transparent" />
               </div>
 
-              {/* Map footnote details */}
+              <div className="relative z-1 flex flex-wrap gap-2 text-[10px] font-black text-white/80">
+                {['Bandung', 'Garut', 'Tasikmalaya', 'Ciamis', 'Banjar'].map((label) => (
+                  <span key={label} className="rounded-full border border-white/10 bg-white/10 px-2.5 py-1">
+                    {label}
+                  </span>
+                ))}
+              </div>
+
               <div className="relative z-1 flex items-center justify-between text-left text-xs text-gray-300 border-t border-white/5 pt-4">
                 <div>
                   <div className="font-extrabold text-white text-sm">250+ Talent</div>
                   <div className="text-[10px] text-gray-400">Aktif Pekan Ini</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-extrabold text-[#18A957] text-sm">Online & Aman</div>
-                  <div className="text-[10px] text-gray-400">Operasional 24 Jam</div>
+                  <a
+                    href="https://www.openstreetmap.org/?mlat=-7.3506&mlon=108.2172#map=9/-7.3506/108.2172"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 font-extrabold text-[#18A957] text-sm"
+                  >
+                    Buka Peta
+                    <ExternalLink size={12} />
+                  </a>
+                  <div className="text-[10px] text-gray-400">Tasikmalaya & Priangan Timur</div>
                 </div>
               </div>
-
             </div>
           </div>
 
