@@ -62,20 +62,13 @@ export function EarningsDashboard({
   const [withdrawError, setWithdrawError] = useState('');
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
-  // Dynamic completed orders history state (initialized from localStorage or defaults)
+  // Dynamic completed orders history state. New accounts must start from zero.
   const [completedOrders, setCompletedOrders] = useState<OrderItem[]>(() => {
     const saved = localStorage.getItem(`suruhin_completed_orders_${currentUser.id}`);
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { }
     }
-    return [
-      { id: 'JOB-701', clientName: 'Dr. Ahmad Fauzi', serviceTitle: 'Antar Jemput Sekolah Anak', categoryName: 'Antar Jemput', date: '14 Juli 2026', amount: 25000, status: 'pending', location: 'SDN 1 Tasikmalaya' },
-      { id: 'JOB-702', clientName: 'Siti Rohmah', serviceTitle: 'Teman Lansia Ke Posyandu', categoryName: 'Temenin', date: '13 Juli 2026', amount: 40000, status: 'cair', payoutMethod: 'BCA', location: 'Posyandu Lansia Mawar' },
-      { id: 'JOB-703', clientName: 'Budi Santoso', serviceTitle: 'Teman Hiking Gunung Galunggung', categoryName: 'Temenin', date: '12 Juli 2026', amount: 75000, status: 'cair', payoutMethod: 'GoPay', location: 'Gunung Galunggung' },
-      { id: 'JOB-704', clientName: 'H. Jajang', serviceTitle: 'Jasa Bersih Kos UNSIL', categoryName: 'Rumah Tangga', date: '10 Juli 2026', amount: 50000, status: 'cair', payoutMethod: 'BCA', location: 'Kos Kahuripan UNSIL' },
-      { id: 'JOB-705', clientName: 'Neng Lilis', serviceTitle: 'Titip Antre RSUD dr. Soekardjo', categoryName: 'Titip & Belanja', date: '08 Juli 2026', amount: 35000, status: 'pending', location: 'RSUD dr. Soekardjo' },
-      { id: 'JOB-706', clientName: 'Andri Wijaya', serviceTitle: 'Antar Jemput Kerja Harian', categoryName: 'Antar Jemput', date: '05 Juli 2026', amount: 30000, status: 'cair', payoutMethod: 'OVO', location: 'Asia Plaza Mall' }
-    ];
+    return [];
   });
 
   // Save completed orders to local storage when changed
@@ -91,17 +84,19 @@ export function EarningsDashboard({
     .filter(o => o.status === 'pending')
     .reduce((sum, o) => sum + o.amount, 0);
 
-  const totalEarningsAllTime = balance + pendingBalance + 1250000; // Mock cumulative historically
+  const totalEarningsAllTime = balance + pendingBalance + transactions
+    .filter((tx) => tx.type === 'payout')
+    .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
 
   // Chart data
-  const monthlyData = [
-    { month: 'Feb', earnings: 320000, orders: 8 },
-    { month: 'Mar', earnings: 450000, orders: 11 },
-    { month: 'Apr', earnings: 510000, orders: 13 },
-    { month: 'Mei', earnings: 680000, orders: 17 },
-    { month: 'Jun', earnings: 820000, orders: 20 },
-    { month: 'Jul', earnings: 960000, orders: 24 }
-  ];
+  const monthlyData = ['Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul'].map((month) => {
+    const monthOrders = completedOrders.filter((order) => order.date.includes(month));
+    return {
+      month,
+      earnings: monthOrders.reduce((sum, order) => sum + order.amount, 0),
+      orders: monthOrders.length,
+    };
+  });
 
   const formatIDR = (val: number) => {
     return new Intl.NumberFormat('id-ID', {

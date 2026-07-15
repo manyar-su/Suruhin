@@ -294,6 +294,10 @@ export default function App() {
         >
           <AuthForm
             initialMode={authModalMode}
+            onSelectRegistrationRole={(role) => {
+              setAuthModalMode(null);
+              navigate(role === 'customer' ? '/register/customer' : '/register/talent');
+            }}
             onSuccess={(user) => {
               setCurrentUser(user);
               setAuthModalMode(null);

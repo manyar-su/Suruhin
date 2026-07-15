@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, Lock, User, KeyRound, CheckCircle, ShieldCheck, TimerReset } from 'lucide-react';
+import { Phone, Lock, User, KeyRound, CheckCircle, ShieldCheck, TimerReset, Search, BriefcaseBusiness, ArrowRight } from 'lucide-react';
 import { Button } from '../shared/Button';
 import { Talent } from '../../types';
 import {
@@ -20,9 +20,10 @@ import { firstValidationError, validatePhone, validatePin, validateRequiredText 
 interface AuthFormProps {
   initialMode?: 'login' | 'register';
   onSuccess: (user: Talent) => void;
+  onSelectRegistrationRole?: (role: 'customer' | 'talent') => void;
 }
 
-export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
+export function AuthForm({ initialMode = 'login', onSuccess, onSelectRegistrationRole }: AuthFormProps) {
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   
   // Login Form States
@@ -284,6 +285,49 @@ export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
         </form>
       ) : (
         /* REGISTER VIEW */
+        onSelectRegistrationRole ? (
+          <div className="space-y-4">
+            <div className="grid gap-3">
+              <button
+                type="button"
+                onClick={() => onSelectRegistrationRole('customer')}
+                className="group rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm transition hover:border-[#FF6500]/30 hover:bg-orange-50/20"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FF6500]/10 text-[#FF6500]">
+                    <Search size={20} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-sm font-black text-[#082B5C]">Daftar sebagai Customer</h4>
+                    <p className="mt-1 text-[11px] leading-relaxed text-gray-500">Cari talent, buat order, dan pantau layanan.</p>
+                  </div>
+                  <ArrowRight size={16} className="text-[#FF6500] transition group-hover:translate-x-1" />
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onSelectRegistrationRole('talent')}
+                className="group rounded-2xl border border-[#082B5C]/10 bg-[#082B5C] p-4 text-left text-white shadow-sm transition hover:bg-[#0b356f]"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#FF6500]">
+                    <BriefcaseBusiness size={20} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-sm font-black">Daftar sebagai Talent</h4>
+                    <p className="mt-1 text-[11px] leading-relaxed text-white/70">Ajukan profil, dokumen, jasa, dan tarif.</p>
+                  </div>
+                  <ArrowRight size={16} className="text-[#FF6500] transition group-hover:translate-x-1" />
+                </div>
+              </button>
+            </div>
+
+            <p className="rounded-2xl bg-slate-50 p-3 text-[10px] leading-relaxed text-gray-500">
+              Pendaftaran lengkap dipisahkan agar dokumen customer dan talent tersimpan ke tabel serta bucket Supabase yang benar.
+            </p>
+          </div>
+        ) : (
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">Nama Lengkap</label>
@@ -366,6 +410,7 @@ export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
             Daftar Akun Baru
           </Button>
         </form>
+        )
       )}
     </div>
   );

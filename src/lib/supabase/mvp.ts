@@ -6,21 +6,45 @@ export type MvpResult<T> =
   | { ok: false; error: string };
 
 export interface MvpCustomerInput {
+  id?: string;
   fullName: string;
   email: string;
   phone: string;
+  nik: string;
+  birthPlace: string;
+  birthDate: string;
+  gender: string;
   address: string;
+  rtRw: string;
+  village: string;
+  district: string;
   city: string;
+  religion: string;
+  maritalStatus: string;
+  occupation: string;
+  nationality: string;
   profilePhoto: File | null;
   ktpPhoto: File | null;
 }
 
 export interface MvpTalentInput {
+  id?: string;
   fullName: string;
   email: string;
   phone: string;
+  nik: string;
+  birthPlace: string;
+  birthDate: string;
+  gender: string;
   address: string;
+  rtRw: string;
+  village: string;
+  district: string;
   city: string;
+  religion: string;
+  maritalStatus: string;
+  occupation: string;
+  nationality: string;
   category: string;
   bio: string;
   hobby: string;
@@ -72,8 +96,19 @@ export interface MvpTalentRow {
   full_name: string;
   email: string;
   phone: string;
+  nik?: string;
+  birth_place?: string;
+  birth_date?: string;
+  gender?: string;
   address: string;
+  rt_rw?: string;
+  village?: string;
+  district?: string;
   city: string;
+  religion?: string;
+  marital_status?: string;
+  occupation?: string;
+  nationality?: string;
   category: string;
   bio: string;
   hobby: string;
@@ -101,7 +136,7 @@ function getClientOrError() {
   }
 }
 
-function createId() {
+export function createMvpEntityId() {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto
     ? crypto.randomUUID()
     : `mvp-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -115,7 +150,12 @@ function getSafeExtension(file: File, fallback: string) {
   return fallback;
 }
 
-async function uploadPrivateFile(bucket: 'customer-files' | 'talent-files', path: string, file: File | null) {
+export async function uploadMvpPrivateFile(
+  bucket: 'customer-files' | 'talent-files',
+  path: string,
+  file: File | null,
+  options?: { upsert?: boolean },
+) {
   if (!file) return '';
 
   const { client, error } = getClientOrError();
@@ -123,7 +163,7 @@ async function uploadPrivateFile(bucket: 'customer-files' | 'talent-files', path
 
   const { error: uploadError } = await client.storage.from(bucket).upload(path, file, {
     cacheControl: '3600',
-    upsert: false,
+    upsert: options?.upsert ?? true,
     contentType: file.type || undefined,
   });
 
@@ -135,21 +175,32 @@ export async function registerMvpCustomer(input: MvpCustomerInput): Promise<MvpR
   const { client, error } = getClientOrError();
   if (!client) return { ok: false, error };
 
-  const id = createId();
+  const id = input.id || createMvpEntityId();
 
   try {
     const profileExt = input.profilePhoto ? getSafeExtension(input.profilePhoto, 'jpg') : 'jpg';
     const ktpExt = input.ktpPhoto ? getSafeExtension(input.ktpPhoto, 'jpg') : 'jpg';
-    const profilePath = await uploadPrivateFile('customer-files', `customer/profile/${id}/foto.${profileExt}`, input.profilePhoto);
-    const ktpPath = await uploadPrivateFile('customer-files', `customer/ktp/${id}/ktp.${ktpExt}`, input.ktpPhoto);
+    const profilePath = await uploadMvpPrivateFile('customer-files', `customer/profile/${id}/foto.${profileExt}`, input.profilePhoto);
+    const ktpPath = await uploadMvpPrivateFile('customer-files', `customer/ktp/${id}/ktp.${ktpExt}`, input.ktpPhoto);
 
     const { error: insertError } = await client.from('customers').insert({
       id,
       full_name: input.fullName.trim(),
       email: input.email.trim(),
       phone: input.phone.trim(),
+      nik: input.nik.trim(),
+      birth_place: input.birthPlace.trim(),
+      birth_date: input.birthDate || null,
+      gender: input.gender.trim(),
       address: input.address.trim(),
+      rt_rw: input.rtRw.trim(),
+      village: input.village.trim(),
+      district: input.district.trim(),
       city: input.city,
+      religion: input.religion.trim(),
+      marital_status: input.maritalStatus.trim(),
+      occupation: input.occupation.trim(),
+      nationality: input.nationality.trim(),
       profile_photo_path: profilePath || null,
       ktp_path: ktpPath || null,
     });
@@ -165,23 +216,34 @@ export async function registerMvpTalent(input: MvpTalentInput): Promise<MvpResul
   const { client, error } = getClientOrError();
   if (!client) return { ok: false, error };
 
-  const id = createId();
+  const id = input.id || createMvpEntityId();
 
   try {
     const profileExt = input.profilePhoto ? getSafeExtension(input.profilePhoto, 'jpg') : 'jpg';
     const ktpExt = input.ktpPhoto ? getSafeExtension(input.ktpPhoto, 'jpg') : 'jpg';
     const skckExt = input.skckPhoto ? getSafeExtension(input.skckPhoto, 'pdf') : 'pdf';
-    const profilePath = await uploadPrivateFile('talent-files', `talent/profile/${id}/foto.${profileExt}`, input.profilePhoto);
-    const ktpPath = await uploadPrivateFile('talent-files', `talent/ktp/${id}/ktp.${ktpExt}`, input.ktpPhoto);
-    const skckPath = await uploadPrivateFile('talent-files', `talent/skck/${id}/skck.${skckExt}`, input.skckPhoto);
+    const profilePath = await uploadMvpPrivateFile('talent-files', `talent/profile/${id}/foto.${profileExt}`, input.profilePhoto);
+    const ktpPath = await uploadMvpPrivateFile('talent-files', `talent/ktp/${id}/ktp.${ktpExt}`, input.ktpPhoto);
+    const skckPath = await uploadMvpPrivateFile('talent-files', `talent/skck/${id}/skck.${skckExt}`, input.skckPhoto);
 
     const { error: insertError } = await client.from('talents').insert({
       id,
       full_name: input.fullName.trim(),
       email: input.email.trim(),
       phone: input.phone.trim(),
+      nik: input.nik.trim(),
+      birth_place: input.birthPlace.trim(),
+      birth_date: input.birthDate || null,
+      gender: input.gender.trim(),
       address: input.address.trim(),
+      rt_rw: input.rtRw.trim(),
+      village: input.village.trim(),
+      district: input.district.trim(),
       city: input.city,
+      religion: input.religion.trim(),
+      marital_status: input.maritalStatus.trim(),
+      occupation: input.occupation.trim(),
+      nationality: input.nationality.trim(),
       category: input.category,
       bio: input.bio.trim(),
       hobby: input.hobby.trim(),
@@ -315,12 +377,13 @@ export async function updateMvpOrderStatus(id: string, status: MvpOrderRow['stat
 function mapMvpTalentToTalent(row: MvpTalentRow): Talent {
   const rating = Number(row.average_rating) || 0;
   const joinedYear = new Date(row.created_at).getFullYear() || new Date().getFullYear();
+  const gender = row.gender === 'Wanita' ? 'Wanita' : 'Pria';
 
   return {
     id: row.id,
     slug: `mvp-${row.id}`,
     name: row.full_name,
-    gender: 'Pria',
+    gender,
     age: 24,
     location: row.city,
     bio: row.bio || row.hobby || 'Talent Suruhin aktif dan siap membantu kebutuhan harian.',

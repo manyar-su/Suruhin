@@ -179,7 +179,7 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
   // Earnings & Withdrawal States
   const [balance, setBalance] = useState(() => {
     const saved = localStorage.getItem(`suruhin_balance_${currentUser.id}`);
-    return saved ? parseInt(saved, 10) : 850000; // Default mock balance
+    return saved ? parseInt(saved, 10) : 0;
   });
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawMethod, setWithdrawMethod] = useState('BCA');
@@ -201,12 +201,7 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { }
     }
-    return [
-      { id: 'TX-901', date: 'Kemarin', type: 'payout', description: 'Upah penyelesaian Antar Jemput Sekolah', amount: 21250, status: 'success' },
-      { id: 'TX-902', date: '12 Juli 2026', type: 'payout', description: 'Upah penyelesaian Teman Hiking Galunggung', amount: 63750, status: 'success' },
-      { id: 'TX-903', date: '10 Juli 2026', type: 'payout', description: 'Upah penyelesaian Jasa Bersih Kos UNSIL', amount: 34000, status: 'success' },
-      { id: 'TX-904', date: '05 Juli 2026', type: 'withdrawal', description: 'Pencairan saldo ke Bank BCA', amount: 450000, status: 'success' }
-    ];
+    return [];
   });
 
   // Save balance & transactions
@@ -499,7 +494,7 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
         {/* Role Selector Dashboard Switcher */}
         <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-slate-100 p-4.5 rounded-3xl mb-8 shadow-3xs text-left">
           <div className="space-y-1">
-            <span className="text-[9px] bg-orange-100 text-[#FF6500] font-black uppercase tracking-wider px-2 py-0.5 rounded-md">Simulasi Alur Kerja (Workflow)</span>
+            <span className="text-[9px] bg-orange-100 text-[#FF6500] font-black uppercase tracking-wider px-2 py-0.5 rounded-md">Alur Kerja Talent</span>
             <span className="text-xs font-black text-[#082B5C] block">Ganti Peran di Sini Untuk Menguji Persetujuan & Pembayaran Dua Arah:</span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
