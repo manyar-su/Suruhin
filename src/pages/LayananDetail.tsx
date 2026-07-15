@@ -5,7 +5,7 @@ import { FallbackImage } from '../components/shared/FallbackImage';
 import { Rating } from '../components/shared/Rating';
 import { BookingForm } from '../components/forms/BookingForm';
 import { MapPin, ShieldAlert, BadgeCheck, Clock, Users, ArrowLeft, Star, Quote } from 'lucide-react';
-import { getServiceImagePath } from '../lib/assetPaths';
+import { getServiceImagePath, getTalentAvatarPath } from '../lib/assetPaths';
 import { formatCurrency } from '../lib/formatCurrency';
 import { useServiceCatalog } from '../hooks/useServiceCatalog';
 import { useTalentCatalog } from '../hooks/useTalentCatalog';
@@ -31,7 +31,7 @@ export function LayananDetail({ slug, navigate }: LayananDetailProps) {
     return combinedServices.find((s) => s.slug === slug);
   }, [combinedServices, slug]);
 
-  // Find matching talents for this service (show all available)
+  // Show the registered catalog talents for every service so users always see real available accounts.
   const serviceTalents = useMemo(() => {
     if (!service) return [];
     if (service.id.startsWith('ts-')) {
@@ -40,8 +40,8 @@ export function LayananDetail({ slug, navigate }: LayananDetailProps) {
         return talents.filter((t) => t.id === customSrv.talentId);
       }
     }
-    return talents.filter((t) => t.services.includes(service.slug) && t.available);
-  }, [service]);
+    return talents.filter((t) => t.available);
+  }, [service, talents]);
 
   // Extract unique skills from talents available for this specific service
   const uniqueSkills = useMemo(() => {
@@ -332,6 +332,7 @@ export function LayananDetail({ slug, navigate }: LayananDetailProps) {
                           
                           <div className="w-14 h-14 rounded-full bg-white border-2 border-white shadow-sm overflow-hidden mb-2.5">
                             <FallbackImage
+                              src={getTalentAvatarPath(t.avatar, t.name)}
                               alt={t.name}
                               type="talent"
                               gender={t.gender}

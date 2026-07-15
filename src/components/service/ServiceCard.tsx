@@ -1,4 +1,4 @@
-import { Heart, MapPin, ChevronRight, Star } from 'lucide-react';
+import { Heart, MapPin, ChevronRight, Star, X } from 'lucide-react';
 import { useState } from 'react';
 import { Service } from '../../types';
 import { formatCurrency } from '../../lib/formatCurrency';
@@ -14,18 +14,60 @@ interface ServiceCardProps {
 
 export function ServiceCard({ service, onViewDetail, variant = 'default' }: ServiceCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const imageSrc = getServiceImagePath(service.image);
+  const fullscreenPreview = isPreviewOpen ? (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/92 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Preview gambar ${service.title}`}
+      onClick={() => setIsPreviewOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          setIsPreviewOpen(false);
+        }}
+        className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#082B5C] shadow-lg"
+        aria-label="Tutup gambar"
+      >
+        <X size={22} />
+      </button>
+      <img
+        src={imageSrc}
+        alt={service.title}
+        className="max-h-[86vh] max-w-[96vw] rounded-2xl object-contain"
+        onClick={(event) => event.stopPropagation()}
+      />
+    </div>
+  ) : null;
 
   if (variant === 'featured') {
     return (
-      <div className="group flex h-full flex-col overflow-hidden rounded-[1.15rem] border border-white/85 bg-white shadow-[0_14px_34px_rgba(8,43,92,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(8,43,92,0.14)] sm:rounded-[1.9rem]">
-        <div className="relative aspect-[1/1.08] overflow-hidden bg-slate-100 sm:aspect-[4/4.8]">
-          <FallbackImage
-            src={getServiceImagePath(service.image)}
-            alt={service.title}
-            type="service"
-            categorySlug={service.category}
-            className="h-full w-full object-contain bg-slate-50 p-1.5 transition duration-500 group-hover:scale-[1.02] sm:object-cover sm:bg-transparent sm:p-0 sm:group-hover:scale-105"
-          />
+      <>
+        <div className="group flex h-full flex-col overflow-hidden rounded-[1.15rem] border border-white/85 bg-white shadow-[0_14px_34px_rgba(8,43,92,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(8,43,92,0.14)] sm:rounded-[1.9rem]">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setIsPreviewOpen(true)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setIsPreviewOpen(true);
+              }
+            }}
+            className="relative aspect-[1/1.08] overflow-hidden bg-slate-100 text-left sm:aspect-[4/4.8]"
+            aria-label={`Lihat gambar ${service.title}`}
+          >
+            <FallbackImage
+              src={imageSrc}
+              alt={service.title}
+              type="service"
+              categorySlug={service.category}
+              className="h-full w-full object-contain bg-slate-50 p-1.5 transition duration-500 group-hover:scale-[1.02] sm:object-cover sm:bg-transparent sm:p-0 sm:group-hover:scale-105"
+            />
 
           <button
             onClick={(e) => {
@@ -44,7 +86,7 @@ export function ServiceCard({ service, onViewDetail, variant = 'default' }: Serv
           <span className="absolute left-2 top-2 max-w-[calc(100%-3rem)] truncate rounded-full bg-white/92 px-2.5 py-1 text-[9px] font-black text-[#081a44] shadow-sm sm:left-4 sm:top-4 sm:px-3 sm:text-[11px]">
             {service.categoryName}
           </span>
-        </div>
+          </div>
 
         <div className="flex flex-1 flex-col gap-3 px-3 py-3 sm:px-5 sm:py-4">
           <div className="min-w-0">
@@ -80,24 +122,39 @@ export function ServiceCard({ service, onViewDetail, variant = 'default' }: Serv
             </button>
           </div>
         </div>
-      </div>
+        </div>
+        {fullscreenPreview}
+      </>
     );
   }
 
   return (
-    <div
-      className="group bg-white rounded-3xl border border-slate-100 hover:border-orange-500/10 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full overflow-hidden"
-      style={{ borderRadius: '20px' }} // Specified: "Border radius card 20px"
-    >
-      {/* Image container */}
-      <div className="relative aspect-4/3 overflow-hidden bg-slate-100">
-        <FallbackImage
-          src={getServiceImagePath(service.image)}
-          alt={service.title}
-          type="service"
-          categorySlug={service.category}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
+    <>
+      <div
+        className="group bg-white rounded-3xl border border-slate-100 hover:border-orange-500/10 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full overflow-hidden"
+        style={{ borderRadius: '20px' }} // Specified: "Border radius card 20px"
+      >
+        {/* Image container */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setIsPreviewOpen(true)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              setIsPreviewOpen(true);
+            }
+          }}
+          className="relative aspect-4/3 overflow-hidden bg-slate-100 text-left"
+          aria-label={`Lihat gambar ${service.title}`}
+        >
+          <FallbackImage
+            src={imageSrc}
+            alt={service.title}
+            type="service"
+            categorySlug={service.category}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
 
         {/* Favorite Button */}
         <button
@@ -120,7 +177,7 @@ export function ServiceCard({ service, onViewDetail, variant = 'default' }: Serv
         <span className="absolute bottom-4.5 left-4.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#082B5C] text-white backdrop-blur-sm shadow-sm z-10">
           {service.categoryName}
         </span>
-      </div>
+        </div>
 
       {/* Details body */}
       <div className="p-5 flex-1 flex flex-col justify-between">
@@ -172,6 +229,8 @@ export function ServiceCard({ service, onViewDetail, variant = 'default' }: Serv
           </button>
         </div>
       </div>
-    </div>
+      </div>
+      {fullscreenPreview}
+    </>
   );
 }
