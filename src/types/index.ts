@@ -27,6 +27,8 @@ export interface Talent {
   gender: 'Pria' | 'Wanita';
   age: number;
   location: string;
+  latitude?: number;
+  longitude?: number;
   bio: string;
   avatar: string;
   services: string[]; // slugs of services they can do
@@ -166,6 +168,8 @@ export interface Booking {
   meetingLatitude?: number;
   meetingLongitude?: number;
   meetingType?: MeetingType;
+  estimatedTravelDistanceKm?: number;
+  estimatedTravelDurationMinutes?: number;
 
   // Tracking waktu fields
   bookedStartTime?: string;

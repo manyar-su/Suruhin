@@ -157,6 +157,12 @@ export function MvpDashboard({ role }: MvpDashboardProps) {
                       <div>
                         <h3 className="text-sm font-black text-[#061B3A]">{order.category}</h3>
                         <p className="mt-1 text-xs text-slate-500">{order.order_date} {order.start_time} - {order.address}</p>
+                        {(order.estimated_travel_duration_minutes || order.estimated_travel_distance_km) && (
+                          <p className="mt-1 text-xs font-semibold text-[#082B5C]">
+                            ETA talent {order.estimated_travel_duration_minutes ? `${Math.round(Number(order.estimated_travel_duration_minutes))} menit` : '-'}
+                            {order.estimated_travel_distance_km ? ` • ${Number(order.estimated_travel_distance_km).toFixed(1)} km` : ''}
+                          </p>
+                        )}
                         <p className="mt-1 text-xs font-bold text-[#FF6500]">{formatCurrency(Number(order.total_price) || 0)}</p>
                       </div>
                       <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black text-[#061B3A]">

@@ -62,9 +62,13 @@ export interface MvpOrderInput {
   startTime: string;
   durationHours: number;
   address: string;
+  latitude?: number | null;
+  longitude?: number | null;
   notes: string;
   pricePerHour: number;
   totalPrice: number;
+  estimatedTravelDistanceKm?: number | null;
+  estimatedTravelDurationMinutes?: number | null;
 }
 
 export interface MvpRatingInput {
@@ -84,9 +88,13 @@ export interface MvpOrderRow {
   start_time: string;
   duration_hours: number;
   address: string;
+  latitude?: number | null;
+  longitude?: number | null;
   notes: string;
   price_per_hour: number;
   total_price: number;
+  estimated_travel_distance_km?: number | string | null;
+  estimated_travel_duration_minutes?: number | string | null;
   status: 'pending' | 'accepted' | 'rejected' | 'ongoing' | 'completed' | 'cancelled';
   created_at: string;
 }
@@ -114,6 +122,8 @@ export interface MvpTalentRow {
   hobby: string;
   price_per_hour: number | string;
   profile_photo_path: string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   ktp_path?: string | null;
   skck_path?: string | null;
   verification_status: 'pending' | 'approved' | 'rejected';
@@ -256,29 +266,30 @@ export async function registerMvpTalent(input: MvpTalentInput): Promise<MvpResul
 }
 
 export async function createMvpOrder(input: MvpOrderInput): Promise<MvpResult<{ id: string }>> {
-  const { client, error } = getClientOrError();
-  if (!client) return { ok: false, error };
-
-  const { data, error: insertError } = await client
-    .from('orders')
-    .insert({
-      customer_id: input.customerId ?? null,
-      talent_id: input.talentId ?? null,
+  const response = await fetch('/api/orders/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      customerId: input.customerId ?? null,
+      talentId: input.talentId ?? null,
       category: input.category,
-      order_date: input.orderDate,
-      start_time: input.startTime,
-      duration_hours: input.durationHours,
+      orderDate: input.orderDate,
+      startTime: input.startTime,
+      durationHours: input.durationHours,
       address: input.address.trim(),
+      latitude: input.latitude ?? null,
+      longitude: input.longitude ?? null,
       notes: input.notes.trim(),
-      price_per_hour: input.pricePerHour,
-      total_price: input.totalPrice,
-      status: 'pending',
-    })
-    .select('id')
-    .single();
+      pricePerHour: input.pricePerHour,
+      totalPrice: input.totalPrice,
+      estimatedTravelDistanceKm: input.estimatedTravelDistanceKm ?? null,
+      estimatedTravelDurationMinutes: input.estimatedTravelDurationMinutes ?? null,
+    }),
+  });
 
-  if (insertError) return { ok: false, error: insertError.message };
-  return { ok: true, data: data as { id: string } };
+  return readApiResult<{ id: string }>(response, 'Gagal membuat order.');
 }
 
 export async function submitMvpRating(input: MvpRatingInput): Promise<MvpResult<{ id: string }>> {
@@ -307,7 +318,7 @@ export async function listApprovedAvailableMvpTalents(): Promise<MvpResult<Talen
 
   const { data, error: selectError } = await client
     .from('talents')
-    .select('id, full_name, email, phone, address, city, category, bio, hobby, price_per_hour, profile_photo_path, verification_status, is_available, average_rating, total_orders, created_at')
+    .select('id, full_name, email, phone, address, city, category, bio, hobby, price_per_hour, profile_photo_path, latitude, longitude, verification_status, is_available, average_rating, total_orders, created_at')
     .eq('verification_status', 'approved')
     .eq('is_available', true)
     .order('average_rating', { ascending: false });
@@ -322,7 +333,7 @@ export async function listMvpTalentsForAdmin(): Promise<MvpResult<MvpTalentRow[]
 
   const { data, error: selectError } = await client
     .from('talents')
-    .select('id, full_name, email, phone, address, city, category, bio, hobby, price_per_hour, profile_photo_path, verification_status, is_available, average_rating, total_orders, created_at')
+    .select('id, full_name, email, phone, address, city, category, bio, hobby, price_per_hour, profile_photo_path, latitude, longitude, verification_status, is_available, average_rating, total_orders, created_at')
     .order('created_at', { ascending: false });
 
   if (selectError) return { ok: false, error: selectError.message };
@@ -477,7 +488,7 @@ export async function listMvpOrders(): Promise<MvpResult<MvpOrderRow[]>> {
 
   const { data, error: selectError } = await client
     .from('orders')
-    .select('id, customer_id, talent_id, category, order_date, start_time, duration_hours, address, notes, price_per_hour, total_price, status, created_at')
+    .select('id, customer_id, talent_id, category, order_date, start_time, duration_hours, address, latitude, longitude, notes, price_per_hour, total_price, estimated_travel_distance_km, estimated_travel_duration_minutes, status, created_at')
     .order('created_at', { ascending: false });
 
   if (selectError) return { ok: false, error: selectError.message };
@@ -512,6 +523,8 @@ function mapMvpTalentToTalent(row: MvpTalentRow): Talent {
     gender,
     age: 24,
     location: row.city,
+    latitude: typeof row.latitude === 'number' ? row.latitude : row.latitude ? Number(row.latitude) : undefined,
+    longitude: typeof row.longitude === 'number' ? row.longitude : row.longitude ? Number(row.longitude) : undefined,
     bio: row.bio || row.hobby || 'Talent Suruhin aktif dan siap membantu kebutuhan harian.',
     avatar: row.profile_photo_path || '',
     services: [row.category],
