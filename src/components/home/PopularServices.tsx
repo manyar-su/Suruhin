@@ -29,14 +29,14 @@ export function PopularServices({ onViewService, onViewAllServices }: PopularSer
           </button>
         </div>
 
-        <div className="mb-6 overflow-hidden rounded-[2rem] border border-white/85 bg-white shadow-[0_24px_60px_rgba(8,43,92,0.08)] sm:mb-8">
+        <div className="mb-6 hidden overflow-hidden rounded-[2rem] border border-white/85 bg-white shadow-[0_24px_60px_rgba(8,43,92,0.08)] sm:mb-8 md:block">
           <img
             src={getStaticAssetPath('ui/services-reference.webp')}
             alt="Rekomendasi layanan Suruhin"
             loading="lazy"
             decoding="async"
             fetchPriority="low"
-            className="h-full max-h-[12rem] w-full object-cover object-top sm:max-h-[21rem]"
+            className="h-full max-h-[21rem] w-full object-cover object-top"
           />
         </div>
 
