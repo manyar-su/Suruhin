@@ -66,6 +66,7 @@ export function Navbar({
   const navLinks = [
     { name: 'Beranda', path: '/' },
     { name: 'Layanan', path: '/layanan' },
+    { name: 'Cari Pekerjaan', path: '/jobs' },
     { name: 'Cara Kerja', path: '/cara-kerja' },
     { name: 'Jadi Talent', path: '/jadi-talent' },
     { name: 'Keamanan', path: '/keamanan' },

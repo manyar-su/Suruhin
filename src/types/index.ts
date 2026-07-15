@@ -260,6 +260,68 @@ export enum TalentServiceStatus {
 export type PricingType = "HOURLY" | "FIXED" | "PER_SESSION" | "CUSTOM_QUOTE" | "PER_DAY";
 
 export type ServiceMode = "ONLINE" | "OFFLINE" | "ONLINE_OFFLINE";
+export type JobPostStatus = "DRAFT" | "OPEN" | "IN_DISCUSSION" | "RECRUITED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "EXPIRED";
+export type JobApplicationStatus = "SUBMITTED" | "VIEWED" | "SHORTLISTED" | "ACCEPTED" | "REJECTED" | "WITHDRAWN";
+export type JobServiceMode = "ONLINE" | "OFFLINE" | "HYBRID";
+
+export interface CustomerProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  city: string;
+  address: string;
+}
+
+export interface JobPost {
+  id: string;
+  slug: string;
+  customerId: string;
+  customerName: string;
+  title: string;
+  description: string;
+  categoryId: string;
+  categoryName: string;
+  budget: number;
+  location: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  serviceMode: JobServiceMode;
+  deadline?: string | null;
+  status: JobPostStatus;
+  imagePath?: string | null;
+  filePath?: string | null;
+  commentCount: number;
+  applicationCount: number;
+  selectedTalentId?: string | null;
+  selectedApplicationId?: string | null;
+  acceptedOrderId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JobComment {
+  id: string;
+  jobId: string;
+  userId: string;
+  actorRole: 'customer' | 'talent' | 'admin';
+  actorName: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface JobApplication {
+  id: string;
+  jobId: string;
+  talentId: string;
+  talentName: string;
+  talentAvatar?: string | null;
+  offerPrice: number;
+  estimatedDuration: string;
+  message: string;
+  status: JobApplicationStatus;
+  createdAt: string;
+}
 
 export interface ServiceCategory {
   id: string;

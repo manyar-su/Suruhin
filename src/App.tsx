@@ -26,6 +26,12 @@ import { ProfilTalent } from './pages/ProfilTalent';
 import { PesananTrackingPage } from './pages/PesananTrackingPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { MvpDashboard } from './pages/MvpDashboard';
+import { JobsMarketplacePage } from './pages/JobsMarketplacePage';
+import { JobDetailPage } from './pages/JobDetailPage';
+import { CustomerJobsPage } from './pages/CustomerJobsPage';
+import { CustomerJobCreatePage } from './pages/CustomerJobCreatePage';
+import { CustomerJobDetailPage } from './pages/CustomerJobDetailPage';
+import { TalentApplicationsPage } from './pages/TalentApplicationsPage';
 
 export default function App() {
   const { currentRoute, navigate } = useNavigation();
@@ -41,7 +47,16 @@ export default function App() {
     []
   );
 
-  const mvpOpenPages = new Set(['dashboard-customer', 'dashboard-talent', 'dashboard-admin']);
+  const mvpOpenPages = new Set([
+    'dashboard-customer',
+    'dashboard-talent',
+    'dashboard-admin',
+    'dashboard-customer-jobs',
+    'dashboard-customer-jobs-create',
+    'dashboard-customer-jobs-detail',
+    'dashboard-talent-jobs',
+    'dashboard-talent-applications',
+  ]);
   const isProtectedRoute = (protectedPages.has(currentRoute.page) || currentRoute.path.startsWith('/dashboard/')) && !mvpOpenPages.has(currentRoute.page);
 
   useEffect(() => {
@@ -189,6 +204,10 @@ export default function App() {
         return <LayananDetail slug={currentRoute.slug || ''} navigate={navigate} />;
       case 'talent-list':
         return <TalentList navigate={navigate} queryParams={currentRoute.queryParams} />;
+      case 'jobs-list':
+        return <JobsMarketplacePage navigate={navigate} />;
+      case 'job-detail':
+        return <JobDetailPage slug={currentRoute.slug || ''} navigate={navigate} />;
       case 'talent-detail':
         return <TalentDetail slug={currentRoute.slug || ''} navigate={navigate} />;
       case 'register':
@@ -199,8 +218,18 @@ export default function App() {
         return <RegisterPage mode="talent" navigate={navigate} />;
       case 'dashboard-customer':
         return <MvpDashboard role="customer" />;
+      case 'dashboard-customer-jobs':
+        return <CustomerJobsPage navigate={navigate} />;
+      case 'dashboard-customer-jobs-create':
+        return <CustomerJobCreatePage navigate={navigate} />;
+      case 'dashboard-customer-jobs-detail':
+        return <CustomerJobDetailPage id={currentRoute.slug || ''} navigate={navigate} />;
       case 'dashboard-talent':
         return <MvpDashboard role="talent" />;
+      case 'dashboard-talent-jobs':
+        return <JobsMarketplacePage navigate={navigate} />;
+      case 'dashboard-talent-applications':
+        return <TalentApplicationsPage navigate={navigate} />;
       case 'dashboard-admin':
         return <MvpDashboard role="admin" />;
       case 'profil-talent':

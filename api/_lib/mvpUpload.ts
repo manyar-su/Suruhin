@@ -31,7 +31,7 @@ export function assertUploadableFile(file: MultipartFile | undefined, label: str
 }
 
 export async function uploadPrivateBuffer(
-  bucket: 'customer-files' | 'talent-files',
+  bucket: 'customer-files' | 'talent-files' | 'job-images' | 'job-files',
   path: string,
   file: MultipartFile,
   options?: { upsert?: boolean },

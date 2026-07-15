@@ -4,6 +4,7 @@ import { locations } from '../../data/locations';
 import { requestKtpOcr } from '../../lib/ocr/client';
 import type { KtpParsedFields } from '../../lib/ocr/ktp';
 import { Button } from '../shared/Button';
+import { saveCurrentCustomerProfile } from '../../lib/customerProfile';
 import {
   firstValidationError,
   validateEmail,
@@ -208,6 +209,14 @@ export function CustomerRegistrationForm({ onSuccess }: CustomerRegistrationForm
       return;
     }
 
+    saveCurrentCustomerProfile({
+      id: result.data.id,
+      fullName: formData.fullName.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
+      city: formData.city.trim(),
+      address: formData.address.trim(),
+    });
     setFormSubmitted(true);
     onSuccess?.();
     window.scrollTo(0, 0);

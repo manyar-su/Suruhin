@@ -43,6 +43,13 @@ export function parseRoute(urlPath: string): RouteInfo {
   if (path === '/talent') {
     return { path, page: 'talent-list', queryParams };
   }
+  if (path === '/jobs' || path === '/public/jobs') {
+    return { path, page: 'jobs-list', queryParams };
+  }
+  if (path.startsWith('/jobs/')) {
+    const slug = path.substring('/jobs/'.length);
+    return { path, page: 'job-detail', slug, queryParams };
+  }
   if (path.startsWith('/talent/')) {
     const slug = path.substring('/talent/'.length);
     return { path, page: 'talent-detail', slug, queryParams };
@@ -62,8 +69,24 @@ export function parseRoute(urlPath: string): RouteInfo {
   if (path === '/dashboard/customer') {
     return { path, page: 'dashboard-customer', queryParams };
   }
+  if (path === '/dashboard/customer/jobs') {
+    return { path, page: 'dashboard-customer-jobs', queryParams };
+  }
+  if (path === '/dashboard/customer/jobs/create') {
+    return { path, page: 'dashboard-customer-jobs-create', queryParams };
+  }
+  if (path.startsWith('/dashboard/customer/jobs/')) {
+    const slug = path.substring('/dashboard/customer/jobs/'.length);
+    return { path, page: 'dashboard-customer-jobs-detail', slug, queryParams };
+  }
   if (path === '/dashboard/talent') {
     return { path, page: 'dashboard-talent', queryParams };
+  }
+  if (path === '/dashboard/talent/jobs') {
+    return { path, page: 'dashboard-talent-jobs', queryParams };
+  }
+  if (path === '/dashboard/talent/applications') {
+    return { path, page: 'dashboard-talent-applications', queryParams };
   }
   if (path === '/admin') {
     return { path, page: 'dashboard-admin', queryParams };
