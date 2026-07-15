@@ -17,6 +17,7 @@ export function TalentCard({ talent, onViewProfile }: TalentCardProps) {
       {/* Photo header */}
       <div className="relative aspect-square overflow-hidden bg-slate-50">
         <FallbackImage
+          src={talent.avatar.startsWith('http') || talent.avatar.startsWith('data:') ? talent.avatar : `/avatars/${talent.avatar}`}
           alt={talent.name}
           type="talent"
           gender={talent.gender}

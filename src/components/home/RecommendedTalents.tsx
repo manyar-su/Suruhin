@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
-import { talents } from '../../data/talents';
 import { SectionHeader } from '../shared/SectionHeader';
 import { TalentCard } from '../talent/TalentCard';
 import { Filter, Users, User, UserCheck, Star } from 'lucide-react';
+import { useTalentCatalog } from '../../hooks/useTalentCatalog';
 
 interface RecommendedTalentsProps {
   onViewTalent: (slug: string) => void;
@@ -11,6 +11,7 @@ interface RecommendedTalentsProps {
 type FilterType = 'all' | 'pria' | 'wanita' | 'available' | 'top-rated';
 
 export function RecommendedTalents({ onViewTalent }: RecommendedTalentsProps) {
+  const talents = useTalentCatalog();
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   // Filter and sort logic
@@ -29,7 +30,7 @@ export function RecommendedTalents({ onViewTalent }: RecommendedTalentsProps) {
     }
 
     return list;
-  }, [activeFilter]);
+  }, [activeFilter, talents]);
 
   const filterPills = [
     { id: 'all', label: 'Semua Talent', icon: Users },

@@ -6,7 +6,7 @@ import { Modal } from './components/shared/Modal';
 import { AuthForm } from './components/forms/AuthForm';
 import { Button } from './components/shared/Button';
 import { Talent } from './types';
-import { clearUserSession, getCurrentSessionUser, touchUserSession, updateStoredUser } from './lib/authSession';
+import { clearUserSession, getCurrentSessionUser, touchUserSession, updateStoredUser, upsertCustomTalent } from './lib/authSession';
 
 // Pages
 import { Home } from './pages/Home';
@@ -125,16 +125,7 @@ export default function App() {
             onUpdateUser={(updated) => {
               setCurrentUser(updated);
               updateStoredUser(updated);
-              // Sync to custom register storage if applicable
-              const savedCustom = localStorage.getItem('suruhin_custom_talent');
-              if (savedCustom) {
-                try {
-                  const parsedCustom = JSON.parse(savedCustom);
-                  if (parsedCustom.id === updated.id) {
-                    localStorage.setItem('suruhin_custom_talent', JSON.stringify(updated));
-                  }
-                } catch (e) { }
-              }
+              upsertCustomTalent(updated);
             }}
             navigate={navigate}
           />

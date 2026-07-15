@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Calendar, Clock, MapPin, Notebook, User, Calculator, ArrowRight } from 'lucide-react';
 import { Service, Talent } from '../../types';
-import { talents } from '../../data/talents';
 import { formatCurrency } from '../../lib/formatCurrency';
 import { generateOrderId } from '../../lib/utils';
 import { generateBookingMessage, generateWhatsAppUrl } from '../../lib/whatsapp';
 import { Button } from '../shared/Button';
 import { FallbackImage } from '../shared/FallbackImage';
+import { useTalentCatalog } from '../../hooks/useTalentCatalog';
 
 interface BookingFormProps {
   service: Service;
@@ -15,10 +15,12 @@ interface BookingFormProps {
 }
 
 export function BookingForm({ service, selectedTalentSlug, onSuccess }: BookingFormProps) {
+  const talents = useTalentCatalog();
+
   // Find matching talents for this service
   const matchingTalents = useMemo(() => {
     return talents.filter((t) => t.services.includes(service.slug) && t.available);
-  }, [service.slug]);
+  }, [service.slug, talents]);
 
   // Form State
   const [customerName, setCustomerName] = useState('');
@@ -47,7 +49,18 @@ export function BookingForm({ service, selectedTalentSlug, onSuccess }: BookingF
         setSelectedTalentId(match.id);
       }
     }
-  }, [selectedTalentSlug]);
+  }, [selectedTalentSlug, talents]);
+
+  useEffect(() => {
+    if (matchingTalents.length === 0) {
+      setSelectedTalentId('');
+      return;
+    }
+
+    if (!matchingTalents.some((talent) => talent.id === selectedTalentId)) {
+      setSelectedTalentId(matchingTalents[0].id);
+    }
+  }, [matchingTalents, selectedTalentId]);
 
   // Selected Talent Object
   const selectedTalent = useMemo(() => {
@@ -299,6 +312,7 @@ export function BookingForm({ service, selectedTalentSlug, onSuccess }: BookingF
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-white border border-slate-200 overflow-hidden shrink-0 shadow-sm">
                         <FallbackImage
+                          src={t.avatar.startsWith('http') || t.avatar.startsWith('data:') ? t.avatar : `/avatars/${t.avatar}`}
                           alt={t.name}
                           type="talent"
                           gender={t.gender}

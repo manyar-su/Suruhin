@@ -264,7 +264,7 @@ export function PesananTrackingPage({
           <div className="space-y-1 text-left">
             <h1 className="text-sm font-black uppercase tracking-widest text-orange-400">Tracking Operasional Talent</h1>
             <p className="text-sm font-semibold text-slate-200">
-              Pantau perjalanan, verifikasi titik temu, dan koordinasi pelanggan dari satu panel kerja.
+              Pantau perjalanan Mapbox, verifikasi titik temu, dan koordinasi pelanggan dari satu panel kerja.
             </p>
           </div>
           <button

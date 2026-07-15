@@ -13,6 +13,7 @@ import {
   recordFailedLogin,
   registerCustomCredential,
   resolveLoginUser,
+  upsertCustomTalent,
 } from '../../lib/authSession';
 
 interface AuthFormProps {
@@ -163,7 +164,7 @@ export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
         ]
       };
 
-      localStorage.setItem('suruhin_custom_talent', JSON.stringify(newTalentUser));
+      upsertCustomTalent(newTalentUser);
       registerCustomCredential(normalizedPhone, normalizedPin, newTalentUser.id);
       createUserSession(newTalentUser);
       setSecurityMessage('Akun baru diamankan dengan sesi aktif dan limit percobaan login.');

@@ -1,6 +1,4 @@
-import React, { useMemo, useState } from 'react';
-import { talents } from '../data/talents';
-import { services } from '../data/services';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Container } from '../components/layout/Container';
 import { FallbackImage } from '../components/shared/FallbackImage';
 import { Rating } from '../components/shared/Rating';
@@ -8,6 +6,8 @@ import { BookingForm } from '../components/forms/BookingForm';
 import { MapPin, ShieldCheck, ArrowLeft, Star, Briefcase, Calendar, Sparkles, CheckCircle, Mail, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '../lib/formatCurrency';
 import { TalentReviewSystem } from '../components/talent/TalentReviewSystem';
+import { useTalentCatalog } from '../hooks/useTalentCatalog';
+import { useServiceCatalog } from '../hooks/useServiceCatalog';
 
 interface TalentDetailProps {
   slug: string;
@@ -15,10 +15,13 @@ interface TalentDetailProps {
 }
 
 export function TalentDetail({ slug, navigate }: TalentDetailProps) {
+  const talents = useTalentCatalog();
+  const services = useServiceCatalog();
+
   // Find current talent
   const talent = useMemo(() => {
     return talents.find((t) => t.slug === slug);
-  }, [slug]);
+  }, [slug, talents]);
 
   // Find services supported by this talent
   const supportedServices = useMemo(() => {
@@ -30,6 +33,12 @@ export function TalentDetail({ slug, navigate }: TalentDetailProps) {
   const [selectedServiceSlug, setSelectedServiceSlug] = useState(() => {
     return supportedServices[0]?.slug || '';
   });
+
+  useEffect(() => {
+    if (!supportedServices.some((service) => service.slug === selectedServiceSlug)) {
+      setSelectedServiceSlug(supportedServices[0]?.slug || '');
+    }
+  }, [selectedServiceSlug, supportedServices]);
 
   const activeService = useMemo(() => {
     return services.find((s) => s.slug === selectedServiceSlug);
@@ -79,6 +88,7 @@ export function TalentDetail({ slug, navigate }: TalentDetailProps) {
               {/* Photo */}
               <div className="w-28 h-28 rounded-3xl overflow-hidden bg-slate-100 border-4 border-slate-100 shadow-md shrink-0 relative">
                 <FallbackImage
+                  src={talent.avatar.startsWith('http') || talent.avatar.startsWith('data:') ? talent.avatar : `/avatars/${talent.avatar}`}
                   alt={talent.name}
                   type="talent"
                   gender={talent.gender}

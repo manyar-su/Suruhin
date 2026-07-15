@@ -31,7 +31,7 @@ export function TrackingControls({
 
       <Button variant="outline" onClick={onOpenMapbox} className="font-bold">
         <Map size={15} className="mr-2" />
-        Buka di Mapbox
+        Buka di Mapbox Navigation
       </Button>
 
       <Button variant="outline" onClick={onOpenGoogleMaps} className="font-bold">

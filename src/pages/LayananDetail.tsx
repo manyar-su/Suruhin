@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { getCombinedServices, getCustomServices } from '../data/mockExtensionData';
-import { talents } from '../data/talents';
+import { getCustomServices } from '../data/mockExtensionData';
 import { Container } from '../components/layout/Container';
 import { FallbackImage } from '../components/shared/FallbackImage';
 import { Rating } from '../components/shared/Rating';
@@ -8,6 +7,8 @@ import { BookingForm } from '../components/forms/BookingForm';
 import { MapPin, ShieldAlert, BadgeCheck, Clock, Users, ArrowLeft, Star, Quote } from 'lucide-react';
 import { getServiceImagePath } from '../lib/assetPaths';
 import { formatCurrency } from '../lib/formatCurrency';
+import { useServiceCatalog } from '../hooks/useServiceCatalog';
+import { useTalentCatalog } from '../hooks/useTalentCatalog';
 
 interface LayananDetailProps {
   slug: string;
@@ -22,7 +23,8 @@ export function LayananDetail({ slug, navigate }: LayananDetailProps) {
   const [filterReadyToday, setFilterReadyToday] = useState<boolean>(false);
   const [filterSkill, setFilterSkill] = useState<string>('Semua');
 
-  const combinedServices = useMemo(() => getCombinedServices(), []);
+  const combinedServices = useServiceCatalog();
+  const talents = useTalentCatalog();
 
   // Find current service
   const service = useMemo(() => {

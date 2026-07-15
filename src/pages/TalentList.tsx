@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search, Sparkles, Filter, CheckCircle2 } from 'lucide-react';
-import { talents } from '../data/talents';
 import { locations } from '../data/locations';
 import { TalentCard } from '../components/talent/TalentCard';
 import { Container } from '../components/layout/Container';
 import { EmptyState } from '../components/shared/EmptyState';
+import { useTalentCatalog } from '../hooks/useTalentCatalog';
 
 interface TalentListProps {
   navigate: (path: string) => void;
@@ -12,6 +12,7 @@ interface TalentListProps {
 }
 
 export function TalentList({ navigate, queryParams }: TalentListProps) {
+  const talents = useTalentCatalog();
   const [searchQuery, setSearchQuery] = useState(queryParams.search || '');
   const [selectedGender, setSelectedGender] = useState(queryParams.gender || 'all');
   const [selectedLocation, setSelectedLocation] = useState(queryParams.location || 'all');

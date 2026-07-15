@@ -530,6 +530,11 @@ export function resolveIncident(incidentId: string): SafetyIncident | null {
 
 const CUSTOM_SERVICES_KEY = 'suruhin_custom_services';
 const REVISIONS_KEY = 'suruhin_service_revisions';
+export const CUSTOM_SERVICES_UPDATED_EVENT = 'suruhin_custom_services_updated';
+
+function emitCustomServicesUpdated() {
+  window.dispatchEvent(new Event(CUSTOM_SERVICES_UPDATED_EVENT));
+}
 
 export function getCustomServices(): TalentService[] {
   const saved = localStorage.getItem(CUSTOM_SERVICES_KEY);
@@ -716,6 +721,7 @@ export function getCustomServices(): TalentService[] {
 
 export function saveCustomServices(servicesList: TalentService[]) {
   localStorage.setItem(CUSTOM_SERVICES_KEY, JSON.stringify(servicesList));
+  emitCustomServicesUpdated();
 }
 
 export function getTalentServices(talentId: string): TalentService[] {
@@ -856,6 +862,5 @@ export function getCombinedServices(): Service[] {
   const mappedCustom = custom.map(mapTalentServiceToService);
   return [...staticServices, ...mappedCustom];
 }
-
 
 

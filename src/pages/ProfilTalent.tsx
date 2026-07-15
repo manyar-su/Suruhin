@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container } from '../components/layout/Container';
 import { services as allServices } from '../data/services';
 import { categories } from '../data/categories';
-import { Talent, Service } from '../types';
+import { Talent, Service, TalentService, TalentServiceStatus } from '../types';
 import { EarningsDashboard } from '../components/talent/EarningsDashboard';
 import { TalentExtensionDashboard } from '../components/talent/TalentExtensionDashboard';
 import { CustomerExtensionDashboard } from '../components/customer/CustomerExtensionDashboard';
@@ -34,7 +34,16 @@ import {
   BellRing,
   MailOpen
 } from 'lucide-react';
-import { getNotifications, saveNotifications, NotificationItem } from '../data/mockExtensionData';
+import {
+  CUSTOM_SERVICES_UPDATED_EVENT,
+  deleteTalentService,
+  getNotifications,
+  getTalentServices,
+  mapTalentServiceToService,
+  saveNotifications,
+  saveTalentService,
+  NotificationItem,
+} from '../data/mockExtensionData';
 
 interface ProfilTalentProps {
   currentUser: Talent | null;
@@ -130,18 +139,23 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
   const [servicesSuccess, setServicesSuccess] = useState('');
 
   // New dynamic custom services state
-  const [customServices, setCustomServices] = useState<Service[]>(() => {
-    const saved = localStorage.getItem(`suruhin_custom_services_${currentUser.id}`);
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { }
-    }
-    return [];
-  });
+  const [customServices, setCustomServices] = useState<Service[]>(() =>
+    getTalentServices(currentUser.id).map(mapTalentServiceToService)
+  );
 
-  // Save custom services to local storage when changed
   useEffect(() => {
-    localStorage.setItem(`suruhin_custom_services_${currentUser.id}`, JSON.stringify(customServices));
-  }, [customServices, currentUser.id]);
+    const syncCustomServices = () => {
+      setCustomServices(getTalentServices(currentUser.id).map(mapTalentServiceToService));
+    };
+
+    window.addEventListener(CUSTOM_SERVICES_UPDATED_EVENT, syncCustomServices);
+    window.addEventListener('storage', syncCustomServices);
+
+    return () => {
+      window.removeEventListener(CUSTOM_SERVICES_UPDATED_EVENT, syncCustomServices);
+      window.removeEventListener('storage', syncCustomServices);
+    };
+  }, [currentUser.id]);
 
   // Combine static and custom services
   const mergedServices = [...allServices, ...customServices];
@@ -275,7 +289,9 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
 
   // Handler: Remove a service from profile
   const handleRemoveService = (slug: string) => {
-    if (currentUser.services.length <= 1) {
+    const customServiceRecord = getTalentServices(currentUser.id).find((service) => service.slug === slug);
+
+    if (!customServiceRecord && currentUser.services.length <= 1) {
       setServicesError('Anda harus menyisakan minimal 1 layanan aktif agar tetap menerima pesanan.');
       setTimeout(() => setServicesError(''), 4000);
       return;
@@ -287,8 +303,17 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
       services: updatedServices
     };
 
+    if (customServiceRecord) {
+      deleteTalentService(customServiceRecord.id);
+      setCustomPrices((prev) => {
+        const next = { ...prev };
+        delete next[slug];
+        return next;
+      });
+    }
+
     onUpdateUser(updatedUser);
-    setServicesSuccess('Layanan berhasil dihapus dari profil Anda.');
+    setServicesSuccess(customServiceRecord ? 'Jasa custom berhasil dihapus dari katalog Anda.' : 'Layanan berhasil dihapus dari profil Anda.');
     setTimeout(() => setServicesSuccess(''), 3000);
   };
 
@@ -336,29 +361,51 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
     }
 
     const matchedCategory = categories.find(c => c.slug === customServiceCategory);
-    const customSlug = `custom-${Date.now()}`;
-    
-    const newSvc: Service = {
-      id: `custom-srv-${Date.now()}`,
-      slug: customSlug,
-      title: customServiceName.trim(),
-      category: customServiceCategory,
+    const customSlugBase = customServiceName
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    const customSlug = `${customSlugBase || 'jasa-custom'}-${Date.now()}`;
+    const now = new Date().toISOString();
+    const locationSegments = (currentUser.location || 'Kota Tasikmalaya').split(',').map((segment) => segment.trim());
+    const cityName = locationSegments[locationSegments.length - 1] || 'Kota Tasikmalaya';
+
+    const newSvc: TalentService = {
+      id: `ts-custom-${Date.now()}`,
+      talentId: currentUser.id,
+      categoryId: customServiceCategory,
       categoryName: matchedCategory ? matchedCategory.name : 'Layanan Lainnya',
+      title: customServiceName.trim(),
+      slug: customSlug,
       shortDescription: customServiceDesc.trim() || 'Layanan bantuan khusus kustom.',
       description: customServiceDesc.trim() || 'Layanan bantuan khusus kustom dari mitra terverifikasi.',
-      location: currentUser.location || 'Kota Tasikmalaya',
-      price: customServicePrice,
-      rating: 5.0,
-      reviewCount: 0,
-      image: 'custom-service.webp',
-      featured: false,
-      included: ['Pelayanan profesional dan santun', 'Sesuai instruksi dan kesepakatan harian'],
-      excluded: ['Biaya tambahan operasional di luar kesepakatan']
+      pricingType: 'FIXED',
+      basePrice: customServicePrice,
+      minimumDurationMinutes: 60,
+      maximumDurationMinutes: 480,
+      city: cityName,
+      district: locationSegments[0] || undefined,
+      serviceRadiusKm: 15,
+      defaultMeetingAddress: currentUser.location || 'Kota Tasikmalaya',
+      trackingMode: 'REQUIRED_DURING_TRAVEL',
+      onlineAvailable: false,
+      instantBookingAvailable: true,
+      negotiable: true,
+      includedItems: ['Pelayanan profesional dan santun', 'Sesuai instruksi dan kesepakatan harian'],
+      excludedItems: ['Biaya tambahan operasional di luar kesepakatan'],
+      status: TalentServiceStatus.ACTIVE,
+      isDeleted: false,
+      createdAt: now,
+      updatedAt: now,
+      images: [],
+      schedules: [],
+      bookingsCount: 0,
+      totalEarnings: 0,
+      rating: 5,
     };
 
-    // Update custom services state
-    const updatedCustomList = [...customServices, newSvc];
-    setCustomServices(updatedCustomList);
+    saveTalentService(newSvc);
 
     // Save customized price
     setCustomPrices(prev => ({

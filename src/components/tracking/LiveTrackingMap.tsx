@@ -202,12 +202,18 @@ export function LiveTrackingMap({
         />
 
         <div className="pointer-events-none absolute left-6 right-6 top-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <ConnectionBadge
-            connectionState={tracking.connectionState}
-            gpsStatus={gpsStatus}
-          />
+          <div className="flex flex-col gap-2">
+            <ConnectionBadge
+              connectionState={tracking.connectionState}
+              gpsStatus={gpsStatus}
+            />
+            <div className="pointer-events-auto inline-flex items-center gap-2 rounded-2xl border border-slate-100 bg-white/95 px-3 py-2 text-[11px] font-bold text-[#082B5C] shadow-sm backdrop-blur-sm">
+              <ShieldCheck size={13} className="text-[#FF6500]" />
+              <span>Mapbox Directions aktif untuk rute, ETA, dan titik temu.</span>
+            </div>
+          </div>
           <div className="pointer-events-auto rounded-2xl border border-slate-100 bg-white/95 px-3 py-2 text-[11px] font-semibold text-[#082B5C] shadow-sm backdrop-blur-sm">
-            {tracking.lastUpdatedAt ? `Update terakhir ${formatRelativeTime(tracking.lastUpdatedAt)}` : 'Menunggu update lokasi terbaru'}
+            {tracking.lastUpdatedAt ? `Update lokasi terakhir ${formatRelativeTime(tracking.lastUpdatedAt)}` : 'Menunggu update lokasi terbaru'}
           </div>
         </div>
 
@@ -236,7 +242,7 @@ export function LiveTrackingMap({
 
       <div className="flex flex-wrap items-center gap-2 rounded-[24px] border border-slate-100 bg-white px-4 py-3 text-[11px] font-semibold text-[#172033]/75 shadow-sm">
         <ShieldCheck size={14} className="text-[#18A957]" />
-        <span>Tracking hanya aktif selama booking berjalan dan akan berhenti otomatis setelah status selesai atau dibatalkan.</span>
+        <span>Tracking Mapbox hanya aktif selama booking berjalan dan akan berhenti otomatis setelah status selesai atau dibatalkan.</span>
       </div>
     </div>
   );
@@ -271,7 +277,7 @@ function ConnectionBadge({
     <div className="pointer-events-auto inline-flex items-center gap-2 rounded-2xl border border-emerald-100 bg-white/95 px-3 py-2 text-[11px] font-bold text-[#082B5C] shadow-sm backdrop-blur-sm">
       <Wifi size={13} className="text-emerald-500" />
       <MapPin size={13} className="text-[#FF6500]" />
-      <span>{connectionState === 'connected' ? 'Supabase Realtime aktif' : 'Tracking lokal aktif'}</span>
+      <span>{connectionState === 'connected' ? 'Mapbox + Supabase Realtime aktif' : 'Mapbox tracking lokal aktif'}</span>
     </div>
   );
 }

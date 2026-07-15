@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
-import { getCombinedServices } from '../data/mockExtensionData';
 import { categories } from '../data/categories';
 import { ServiceCard } from '../components/service/ServiceCard';
 import { Container } from '../components/layout/Container';
 import { EmptyState } from '../components/shared/EmptyState';
 import { Search, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { useServiceCatalog } from '../hooks/useServiceCatalog';
 
 interface LayananListProps {
   navigate: (path: string) => void;
@@ -24,7 +24,7 @@ export function LayananList({ navigate, queryParams }: LayananListProps) {
   const [selectedPriceBand, setSelectedPriceBand] = useState(initialPriceBand);
   const [sortBy, setSortBy] = useState(initialSort);
 
-  const combinedServices = useMemo(() => getCombinedServices(), []);
+  const combinedServices = useServiceCatalog();
   const locationOptions = useMemo(
     () => ['all', ...Array.from(new Set(combinedServices.map((service) => service.location))).sort((a: string, b: string) => a.localeCompare(b))],
     [combinedServices]
@@ -96,7 +96,9 @@ export function LayananList({ navigate, queryParams }: LayananListProps) {
         !searchQuery.trim() ||
         srv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         srv.shortDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        srv.categoryName.toLowerCase().includes(searchQuery.toLowerCase());
+        srv.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        srv.categoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        srv.location.toLowerCase().includes(searchQuery.toLowerCase());
       const locationMatch = selectedLocation === 'all' || srv.location === selectedLocation;
       const priceMatch =
         selectedPriceBand === 'all' ||

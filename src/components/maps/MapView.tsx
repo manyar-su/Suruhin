@@ -184,7 +184,7 @@ export function MapView({
       {isLoading && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm">
           <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-bold text-[#082B5C] shadow-sm">
-            Menyiapkan peta dan rute perjalanan...
+            Menyiapkan peta Mapbox dan rute perjalanan...
           </div>
         </div>
       )}
@@ -194,7 +194,7 @@ export function MapView({
           <div className="max-w-sm rounded-3xl border border-dashed border-slate-200 bg-white px-5 py-6 shadow-sm">
             <h3 className="text-base font-black text-[#082B5C]">Titik temu belum siap</h3>
             <p className="mt-2 text-sm leading-relaxed text-[#172033]/70">
-              Izinkan lokasi browser atau pilih titik temu di peta supaya Mapbox bisa menghitung rute dan ETA.
+              Izinkan lokasi browser atau pilih titik temu di peta supaya Mapbox bisa menghitung rute, jarak, dan ETA secara akurat.
             </p>
           </div>
         </div>

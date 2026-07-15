@@ -29,6 +29,7 @@ export function ArrivalEstimate({
           <p className="text-[10px] text-slate-300 font-medium mt-1">
             Menuju <span className="font-bold text-white">{meetingPlaceName}</span> ({formatDistance(distanceKm)})
           </p>
+          <p className="mt-1 text-[10px] font-semibold text-slate-300">ETA dihitung dari rute Mapbox aktif.</p>
         </div>
         <div className="p-3 bg-white/10 rounded-2xl">
           <Clock size={20} className="text-orange-400" />

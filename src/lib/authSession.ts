@@ -14,6 +14,7 @@ const MAX_FAILED_ATTEMPTS = 5;
 const FAILED_WINDOW_MS = 15 * 60 * 1000;
 const LOCK_DURATION_MS = 30 * 60 * 1000;
 const SUBMIT_COOLDOWN_MS = 1200;
+export const TALENT_CATALOG_UPDATED_EVENT = 'suruhin_talents_updated';
 
 const DEFAULT_DEMO_CREDENTIAL = {
   phone: '08123456789',
@@ -62,16 +63,42 @@ export function normalizePhone(value: string) {
   return value.replace(/\D/g, '');
 }
 
-function getCustomTalent(): Talent | null {
-  return safeParse<Talent>(localStorage.getItem(CUSTOM_TALENT_KEY));
+function getStoredTalentOverrides(): Talent[] {
+  const parsed = safeParse<Talent | Talent[]>(localStorage.getItem(CUSTOM_TALENT_KEY));
+  if (!parsed) {
+    return [];
+  }
+
+  return Array.isArray(parsed) ? parsed : [parsed];
+}
+
+function emitTalentCatalogUpdated() {
+  window.dispatchEvent(new Event(TALENT_CATALOG_UPDATED_EVENT));
+}
+
+export function getAllTalents(): Talent[] {
+  const overrides = getStoredTalentOverrides();
+  if (overrides.length === 0) {
+    return [...talents];
+  }
+
+  const overrideMap = new Map(overrides.map((talent) => [talent.id, talent]));
+  const mergedStatic = talents.map((talent) => overrideMap.get(talent.id) || talent);
+  const appendedCustom = overrides.filter((talent) => !talents.some((item) => item.id === talent.id));
+
+  return [...appendedCustom, ...mergedStatic];
+}
+
+export function upsertCustomTalent(user: Talent) {
+  const currentOverrides = getStoredTalentOverrides();
+  const nextOverrides = currentOverrides.filter((talent) => talent.id !== user.id);
+  nextOverrides.unshift(user);
+  localStorage.setItem(CUSTOM_TALENT_KEY, JSON.stringify(nextOverrides));
+  emitTalentCatalogUpdated();
 }
 
 function resolveUserById(userId: string): Talent | null {
-  const customTalent = getCustomTalent();
-  if (customTalent?.id === userId) {
-    return customTalent;
-  }
-  return talents.find((talent) => talent.id === userId) || null;
+  return getAllTalents().find((talent) => talent.id === userId) || null;
 }
 
 function buildSession(user: Talent): SessionEnvelope {
@@ -109,6 +136,8 @@ export function updateStoredUser(user: Talent) {
   } else {
     createUserSession(user);
   }
+
+  emitTalentCatalogUpdated();
 }
 
 export function clearUserSession() {
