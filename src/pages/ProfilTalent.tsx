@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container } from '../components/layout/Container';
+import { Modal } from '../components/shared/Modal';
 import { services as allServices } from '../data/services';
 import { categories } from '../data/categories';
 import { Talent, Service, TalentService, TalentServiceStatus } from '../types';
@@ -45,14 +46,17 @@ import {
   saveTalentService,
   NotificationItem,
 } from '../data/mockExtensionData';
+import { deleteCurrentUserAccountLocally } from '../lib/authSession';
+import { deleteMvpAccount, updateMvpTalentAvatar, updateMvpTalentDocument, updateMvpTalentProfile } from '../lib/supabase/mvp';
 
 interface ProfilTalentProps {
   currentUser: Talent | null;
   onUpdateUser: (updated: Talent) => void;
+  onDeleteAccount: () => void;
   navigate: (path: string) => void;
 }
 
-export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTalentProps) {
+export function ProfilTalent({ currentUser, onUpdateUser, onDeleteAccount, navigate }: ProfilTalentProps) {
   if (!currentUser) {
     return (
       <div className="py-32 text-center max-w-md mx-auto px-4">
@@ -126,12 +130,20 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
   }, [customPrices, currentUser.id]);
 
   // Profile Form States
+  const [displayName, setDisplayName] = useState(currentUser.name || '');
   const [bio, setBio] = useState(currentUser.bio || '');
   const [age, setAge] = useState(currentUser.age || 24);
   const [location, setLocation] = useState(currentUser.location || '');
   const [skillsText, setSkillsText] = useState(currentUser.skills ? currentUser.skills.join(', ') : '');
   const [languagesText, setLanguagesText] = useState(currentUser.languages ? currentUser.languages.join(', ') : '');
   const [profileSuccess, setProfileSuccess] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [verificationSuccess, setVerificationSuccess] = useState('');
+  const [verificationError, setVerificationError] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteAccountError, setDeleteAccountError] = useState('');
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // Manage Services States
   const [selectedServiceToAdd, setSelectedServiceToAdd] = useState('');
@@ -213,19 +225,91 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
     localStorage.setItem(`suruhin_tx_${currentUser.id}`, JSON.stringify(transactions));
   }, [transactions, currentUser.id]);
 
+  const purgeLocalAccountArtifacts = () => {
+    const scopedKeys = [
+      `suruhin_prices_${currentUser.id}`,
+      `suruhin_ktp_${currentUser.id}`,
+      `suruhin_skck_${currentUser.id}`,
+      `suruhin_balance_${currentUser.id}`,
+      `suruhin_tx_${currentUser.id}`,
+      `suruhin_completed_orders_${currentUser.id}`,
+    ];
+    scopedKeys.forEach((key) => localStorage.removeItem(key));
+
+    const customServicesRaw = localStorage.getItem('suruhin_custom_services');
+    if (customServicesRaw) {
+      try {
+        const parsed = JSON.parse(customServicesRaw) as TalentService[];
+        const filtered = parsed.filter((service) => service.talentId !== currentUser.id);
+        localStorage.setItem('suruhin_custom_services', JSON.stringify(filtered));
+        window.dispatchEvent(new Event(CUSTOM_SERVICES_UPDATED_EVENT));
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    const revisionsRaw = localStorage.getItem('suruhin_service_revisions');
+    if (revisionsRaw) {
+      try {
+        const parsed = JSON.parse(revisionsRaw) as Array<{ submittedById?: string; talentId?: string }>;
+        const filtered = parsed.filter((revision) => revision.submittedById !== currentUser.id && revision.talentId !== currentUser.id);
+        localStorage.setItem('suruhin_service_revisions', JSON.stringify(filtered));
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteAccountError('');
+
+    if (deleteConfirmText.trim().toUpperCase() !== 'HAPUS') {
+      setDeleteAccountError('Ketik HAPUS untuk mengonfirmasi penghapusan akun.');
+      return;
+    }
+
+    setIsDeletingAccount(true);
+    const result = await deleteMvpAccount(currentUser.id);
+    setIsDeletingAccount(false);
+
+    if ('error' in result) {
+      setDeleteAccountError(result.error);
+      return;
+    }
+
+    purgeLocalAccountArtifacts();
+    deleteCurrentUserAccountLocally(currentUser.id);
+    setShowDeleteModal(false);
+    onDeleteAccount();
+  };
+
   // Handler: Update Profile Details
-  const handleUpdateProfile = (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setProfileSuccess(false);
+    setProfileError('');
 
     const updatedUser: Talent = {
       ...currentUser,
+      name: displayName.trim() || currentUser.name,
       bio,
       age: Number(age),
       location,
       skills: skillsText.split(',').map(s => s.trim()).filter(Boolean),
       languages: languagesText.split(',').map(s => s.trim()).filter(Boolean)
     };
+
+    const mvpResult = await updateMvpTalentProfile(currentUser.id, {
+      fullName: updatedUser.name,
+      bio: updatedUser.bio,
+      address: updatedUser.location,
+      city: updatedUser.location,
+    });
+
+    if (mvpResult.ok === false) {
+      setProfileError(mvpResult.error);
+      setTimeout(() => setProfileError(''), 4000);
+    }
 
     onUpdateUser(updatedUser);
     setProfileSuccess(true);
@@ -321,17 +405,24 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
         alert('Ukuran file foto profil maksimal 5MB.');
         return;
       }
+      setProfileError('');
       const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          const updatedUser: Talent = {
-            ...currentUser,
-            avatar: reader.result
-          };
-          onUpdateUser(updatedUser);
-          setProfileSuccess(true);
-          setTimeout(() => setProfileSuccess(false), 3000);
+      reader.onloadend = async () => {
+        if (typeof reader.result !== 'string') return;
+
+        const uploadResult = await updateMvpTalentAvatar(currentUser.id, file);
+        if (uploadResult.ok === false) {
+          setProfileError(uploadResult.error);
+          setTimeout(() => setProfileError(''), 4000);
         }
+
+        const updatedUser: Talent = {
+          ...currentUser,
+          avatar: uploadResult.ok ? uploadResult.data.path : reader.result
+        };
+        onUpdateUser(updatedUser);
+        setProfileSuccess(true);
+        setTimeout(() => setProfileSuccess(false), 3000);
       };
       reader.readAsDataURL(file);
     }
@@ -737,7 +828,7 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
                       <span className="font-bold text-gray-500">KTP (Kartu Tanda Penduduk)</span>
                       {ktpDoc ? (
                         <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-md uppercase flex items-center gap-0.5">
-                          ✓ Unggah Sukses
+                          ✓ Sudah Diunggah
                         </span>
                       ) : (
                         <span className="text-[9px] font-black text-amber-500 bg-amber-50 px-2.5 py-0.5 rounded-md uppercase">
@@ -754,11 +845,19 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
+                            setVerificationError('');
                             const reader = new FileReader();
-                            reader.onloadend = () => {
+                            reader.onloadend = async () => {
                               if (typeof reader.result === 'string') {
-                                localStorage.setItem(`suruhin_ktp_${currentUser.id}`, reader.result);
-                                setKtpDoc(reader.result);
+                                const uploadResult = await updateMvpTalentDocument(currentUser.id, 'ktp', file);
+                                if (uploadResult.ok === false) {
+                                  setVerificationError(uploadResult.error);
+                                  setTimeout(() => setVerificationError(''), 4000);
+                                }
+                                localStorage.setItem(`suruhin_ktp_${currentUser.id}`, uploadResult.ok ? uploadResult.data.path : reader.result);
+                                setKtpDoc(uploadResult.ok ? uploadResult.data.path : reader.result);
+                                setVerificationSuccess('Dokumen KTP sudah diunggah dan status verifikasi diperbarui.');
+                                setTimeout(() => setVerificationSuccess(''), 3000);
                               }
                             };
                             reader.readAsDataURL(file);
@@ -766,7 +865,7 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
                         }}
                       />
                       <Upload size={13} className="text-gray-400" />
-                      <span>{ktpDoc ? 'Ubah KTP Terunggah' : 'Unggah KTP Asli'}</span>
+                      <span>{ktpDoc ? 'Ganti KTP Terunggah' : 'Unggah KTP Asli'}</span>
                     </label>
                   </div>
 
@@ -776,7 +875,7 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
                       <span className="font-bold text-gray-500">SKCK (Catatan Kepolisian)</span>
                       {skckDoc ? (
                         <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-md uppercase flex items-center gap-0.5">
-                          ✓ Unggah Sukses
+                          ✓ Sudah Diunggah
                         </span>
                       ) : (
                         <span className="text-[9px] font-black text-amber-500 bg-amber-50 px-2.5 py-0.5 rounded-md uppercase">
@@ -793,11 +892,19 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
+                            setVerificationError('');
                             const reader = new FileReader();
-                            reader.onloadend = () => {
+                            reader.onloadend = async () => {
                               if (typeof reader.result === 'string') {
-                                localStorage.setItem(`suruhin_skck_${currentUser.id}`, reader.result);
-                                setSkckDoc(reader.result);
+                                const uploadResult = await updateMvpTalentDocument(currentUser.id, 'skck', file);
+                                if (uploadResult.ok === false) {
+                                  setVerificationError(uploadResult.error);
+                                  setTimeout(() => setVerificationError(''), 4000);
+                                }
+                                localStorage.setItem(`suruhin_skck_${currentUser.id}`, uploadResult.ok ? uploadResult.data.path : reader.result);
+                                setSkckDoc(uploadResult.ok ? uploadResult.data.path : reader.result);
+                                setVerificationSuccess('Dokumen SKCK sudah diunggah dan status verifikasi diperbarui.');
+                                setTimeout(() => setVerificationSuccess(''), 3000);
                               }
                             };
                             reader.readAsDataURL(file);
@@ -805,7 +912,7 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
                         }}
                       />
                       <Upload size={13} className="text-gray-400" />
-                      <span>{skckDoc ? 'Ubah SKCK Terunggah' : 'Unggah SKCK Terkini'}</span>
+                      <span>{skckDoc ? 'Ganti SKCK Terunggah' : 'Unggah SKCK Terkini'}</span>
                     </label>
                   </div>
                 </div>
@@ -823,17 +930,38 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
                   </div>
                 )}
 
+                {profileError && (
+                  <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-bold mb-6 flex items-center gap-2">
+                    <AlertCircle size={16} />
+                    <span>{profileError}</span>
+                  </div>
+                )}
+
+                {verificationSuccess && (
+                  <div className="p-4 bg-blue-50 border border-blue-100 text-[#082B5C] rounded-xl text-xs font-bold mb-6 flex items-center gap-2">
+                    <Shield size={16} className="text-[#FF6500]" />
+                    <span>{verificationSuccess}</span>
+                  </div>
+                )}
+
+                {verificationError && (
+                  <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-bold mb-6 flex items-center gap-2">
+                    <AlertCircle size={16} />
+                    <span>{verificationError}</span>
+                  </div>
+                )}
+
                 <form onSubmit={handleUpdateProfile} className="space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Lengkap</label>
                       <input
                         type="text"
-                        disabled
-                        value={currentUser.name}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs text-gray-400 font-semibold cursor-not-allowed"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs text-[#082B5C] font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF6500]/20 focus:border-[#FF6500] transition-all"
                       />
-                      <span className="text-[10px] text-gray-400">*Nama lengkap terikat KTP verifikasi</span>
+                      <span className="text-[10px] text-gray-400">Nama baru akan otomatis ikut berubah di beranda, kartu talent, dan sesi akun setelah disimpan.</span>
                     </div>
 
                     <div className="space-y-1.5">
@@ -898,6 +1026,26 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
                     <Save size={14} />
                     Simpan Perubahan Profil
                   </button>
+
+                  <div className="rounded-2xl border border-red-100 bg-red-50/70 p-4 text-left">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-red-500">Zona Berbahaya</p>
+                    <h4 className="mt-1 text-sm font-extrabold text-[#082B5C]">Hapus akun ini</h4>
+                    <p className="mt-1 text-[11px] leading-relaxed text-[#172033]/70">
+                      Akun, dokumen profil, dan data sesi lokal akan dihapus. Aksi ini meminta konfirmasi ulang sebelum diproses.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteConfirmText('');
+                        setDeleteAccountError('');
+                        setShowDeleteModal(true);
+                      }}
+                      className="mt-3 inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-xs font-extrabold text-white transition-colors hover:bg-red-700"
+                    >
+                      <Trash2 size={14} />
+                      Hapus Akun
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>
@@ -1239,6 +1387,56 @@ export function ProfilTalent({ currentUser, onUpdateUser, navigate }: ProfilTale
           </div>
         )}
       </AnimatePresence>
+
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          if (!isDeletingAccount) {
+            setShowDeleteModal(false);
+          }
+        }}
+        title="Konfirmasi Hapus Akun"
+        size="sm"
+      >
+        <div className="space-y-4 text-left">
+          <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-[11px] leading-relaxed text-red-700">
+            Akun <strong>{currentUser.name}</strong> akan dihapus dari sesi lokal dan kami juga akan mencoba menghapus data MVP di Supabase jika akun ini terdaftar di sana.
+          </div>
+          <p className="text-xs font-semibold text-[#172033]/75">
+            Ketik <span className="rounded bg-slate-100 px-1.5 py-0.5 font-black text-[#082B5C]">HAPUS</span> untuk melanjutkan.
+          </p>
+          <input
+            value={deleteConfirmText}
+            onChange={(event) => setDeleteConfirmText(event.target.value)}
+            placeholder="Ketik HAPUS"
+            className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-bold uppercase text-[#082B5C] outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+          />
+          {deleteAccountError && (
+            <div className="rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-[11px] font-bold text-red-600">
+              {deleteAccountError}
+            </div>
+          )}
+          <div className="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(false)}
+              disabled={isDeletingAccount}
+              className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-[#082B5C] disabled:opacity-50"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={() => { void handleDeleteAccount(); }}
+              disabled={isDeletingAccount}
+              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-xs font-extrabold text-white transition-colors hover:bg-red-700 disabled:opacity-60"
+            >
+              {isDeletingAccount ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+              Konfirmasi Hapus
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

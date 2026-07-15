@@ -114,6 +114,8 @@ export interface MvpTalentRow {
   hobby: string;
   price_per_hour: number | string;
   profile_photo_path: string | null;
+  ktp_path?: string | null;
+  skck_path?: string | null;
   verification_status: 'pending' | 'approved' | 'rejected';
   is_available: boolean;
   average_rating: number | string;
@@ -343,6 +345,139 @@ export async function updateMvpTalentStatus(id: string, patch: Partial<Pick<MvpT
   const { error: updateError } = await client.from('talents').update(patch).eq('id', id);
   if (updateError) return { ok: false, error: updateError.message };
   return { ok: true, data: null };
+}
+
+export async function updateMvpTalentProfile(
+  id: string,
+  patch: {
+    fullName?: string;
+    bio?: string;
+    address?: string;
+    city?: string;
+  }
+): Promise<MvpResult<null>> {
+  const { client, error } = getClientOrError();
+  if (!client) return { ok: false, error };
+
+  const updatePayload: Record<string, string> = {};
+  if (typeof patch.fullName === 'string') updatePayload.full_name = patch.fullName.trim();
+  if (typeof patch.bio === 'string') updatePayload.bio = patch.bio.trim();
+  if (typeof patch.address === 'string') updatePayload.address = patch.address.trim();
+  if (typeof patch.city === 'string') updatePayload.city = patch.city.trim();
+
+  if (Object.keys(updatePayload).length === 0) {
+    return { ok: true, data: null };
+  }
+
+  const { error: updateError } = await client.from('talents').update(updatePayload).eq('id', id);
+  if (updateError) return { ok: false, error: updateError.message };
+  return { ok: true, data: null };
+}
+
+export async function updateMvpTalentAvatar(id: string, file: File): Promise<MvpResult<{ path: string }>> {
+  try {
+    const ext = getSafeExtension(file, 'jpg');
+    const path = await uploadMvpPrivateFile('talent-files', `talent/profile/${id}/foto.${ext}`, file, { upsert: true });
+    const { client, error } = getClientOrError();
+    if (!client) return { ok: false, error };
+
+    const { error: updateError } = await client.from('talents').update({
+      profile_photo_path: path,
+    }).eq('id', id);
+
+    if (updateError) return { ok: false, error: updateError.message };
+    return { ok: true, data: { path } };
+  } catch (uploadError) {
+    return { ok: false, error: uploadError instanceof Error ? uploadError.message : 'Gagal mengunggah foto profil.' };
+  }
+}
+
+export async function updateMvpTalentDocument(
+  id: string,
+  documentType: 'ktp' | 'skck',
+  file: File
+): Promise<MvpResult<{ path: string }>> {
+  try {
+    const ext = getSafeExtension(file, documentType === 'skck' ? 'pdf' : 'jpg');
+    const path = await uploadMvpPrivateFile(
+      'talent-files',
+      `talent/${documentType}/${id}/${documentType}.${ext}`,
+      file,
+      { upsert: true }
+    );
+    const { client, error } = getClientOrError();
+    if (!client) return { ok: false, error };
+
+    const updatePayload =
+      documentType === 'ktp'
+        ? { ktp_path: path, verification_status: 'pending' as const }
+        : { skck_path: path, verification_status: 'pending' as const };
+
+    const { error: updateError } = await client.from('talents').update(updatePayload).eq('id', id);
+    if (updateError) return { ok: false, error: updateError.message };
+
+    return { ok: true, data: { path } };
+  } catch (uploadError) {
+    return { ok: false, error: uploadError instanceof Error ? uploadError.message : 'Gagal mengunggah dokumen verifikasi.' };
+  }
+}
+
+async function removeStoredFile(bucket: 'customer-files' | 'talent-files', path: string | null | undefined) {
+  if (!path) return;
+
+  const { client, error } = getClientOrError();
+  if (!client) throw new Error(error);
+
+  const { error: removeError } = await client.storage.from(bucket).remove([path]);
+  if (removeError) {
+    throw removeError;
+  }
+}
+
+export async function deleteMvpAccount(id: string): Promise<MvpResult<{ role: 'customer' | 'talent' | 'none' }>> {
+  const { client, error } = getClientOrError();
+  if (!client) return { ok: false, error };
+
+  try {
+    const { data: talentRow, error: talentSelectError } = await client
+      .from('talents')
+      .select('id, profile_photo_path, ktp_path, skck_path')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (talentSelectError) throw talentSelectError;
+
+    if (talentRow) {
+      await removeStoredFile('talent-files', talentRow.profile_photo_path);
+      await removeStoredFile('talent-files', talentRow.ktp_path);
+      await removeStoredFile('talent-files', talentRow.skck_path);
+
+      const { error: talentDeleteError } = await client.from('talents').delete().eq('id', id);
+      if (talentDeleteError) throw talentDeleteError;
+      return { ok: true, data: { role: 'talent' } };
+    }
+
+    const { data: customerRow, error: customerSelectError } = await client
+      .from('customers')
+      .select('id, profile_photo_path, ktp_path')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (customerSelectError) throw customerSelectError;
+
+    if (customerRow) {
+      await removeStoredFile('customer-files', customerRow.profile_photo_path);
+      await removeStoredFile('customer-files', customerRow.ktp_path);
+
+      const { error: customerDeleteError } = await client.from('customers').delete().eq('id', id);
+      if (customerDeleteError) throw customerDeleteError;
+      return { ok: true, data: { role: 'customer' } };
+    }
+
+    return { ok: true, data: { role: 'none' } };
+  } catch (deleteError) {
+    return { ok: false, error: deleteError instanceof Error ? deleteError.message : 'Gagal menghapus akun.' };
+  }
 }
 
 export async function listMvpOrders(): Promise<MvpResult<MvpOrderRow[]>> {

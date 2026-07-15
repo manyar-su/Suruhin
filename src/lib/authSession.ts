@@ -97,6 +97,15 @@ export function upsertCustomTalent(user: Talent) {
   emitTalentCatalogUpdated();
 }
 
+function saveStoredTalentOverrides(overrides: Talent[]) {
+  if (overrides.length === 0) {
+    localStorage.removeItem(CUSTOM_TALENT_KEY);
+  } else {
+    localStorage.setItem(CUSTOM_TALENT_KEY, JSON.stringify(overrides));
+  }
+  emitTalentCatalogUpdated();
+}
+
 function resolveUserById(userId: string): Talent | null {
   return getAllTalents().find((talent) => talent.id === userId) || null;
 }
@@ -198,6 +207,27 @@ export function registerCustomCredential(phone: string, pin: string, userId: str
     isCustom: true,
   };
   localStorage.setItem(CUSTOM_CREDENTIALS_KEY, JSON.stringify(credential));
+}
+
+export function deleteCustomCredentialByUserId(userId: string) {
+  const credential = safeParse<StoredCredential>(localStorage.getItem(CUSTOM_CREDENTIALS_KEY));
+  if (credential?.userId === userId) {
+    localStorage.removeItem(CUSTOM_CREDENTIALS_KEY);
+  }
+}
+
+export function deleteCustomTalentById(userId: string) {
+  const nextOverrides = getStoredTalentOverrides().filter((talent) => talent.id !== userId);
+  saveStoredTalentOverrides(nextOverrides);
+}
+
+export function deleteCurrentUserAccountLocally(userId: string) {
+  deleteCustomCredentialByUserId(userId);
+  deleteCustomTalentById(userId);
+  const session = getCurrentSessionUser();
+  if (session?.id === userId) {
+    clearUserSession();
+  }
 }
 
 export function isPhoneAlreadyRegistered(phone: string) {

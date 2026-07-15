@@ -212,6 +212,11 @@ export default function App() {
               updateStoredUser(updated);
               upsertCustomTalent(updated);
             }}
+            onDeleteAccount={() => {
+              clearUserSession();
+              setCurrentUser(null);
+              navigate('/');
+            }}
             navigate={navigate}
           />
         );
