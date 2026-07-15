@@ -15,6 +15,7 @@ import {
   resolveLoginUser,
   upsertCustomTalent,
 } from '../../lib/authSession';
+import { firstValidationError, validatePhone, validatePin, validateRequiredText } from '../../lib/validation/forms';
 
 interface AuthFormProps {
   initialMode?: 'login' | 'register';
@@ -46,13 +47,13 @@ export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
 
     const normalizedPhone = normalizePhone(loginPhone);
     const normalizedPin = loginPassword.trim();
+    const validationError = firstValidationError(
+      validatePhone(loginPhone),
+      validatePin(normalizedPin)
+    );
 
-    if (!normalizedPhone || normalizedPhone.length < 9) {
-      setError('Nomor WhatsApp tidak valid.');
-      return;
-    }
-    if (!/^\d{4,6}$/.test(normalizedPin)) {
-      setError('PIN harus terdiri dari 4 sampai 6 angka.');
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -106,17 +107,14 @@ export function AuthForm({ initialMode = 'login', onSuccess }: AuthFormProps) {
 
     const normalizedPhone = normalizePhone(registerPhone);
     const normalizedPin = registerPassword.trim();
+    const validationError = firstValidationError(
+      validateRequiredText(registerName, 'Nama lengkap wajib diisi.'),
+      validatePhone(registerPhone),
+      validatePin(normalizedPin)
+    );
 
-    if (!registerName.trim()) {
-      setError('Nama lengkap wajib diisi.');
-      return;
-    }
-    if (!normalizedPhone || normalizedPhone.length < 9) {
-      setError('Nomor WhatsApp tidak valid.');
-      return;
-    }
-    if (!/^\d{4,6}$/.test(normalizedPin)) {
-      setError('PIN harus terdiri dari 4 sampai 6 angka.');
+    if (validationError) {
+      setError(validationError);
       return;
     }
     if (isPhoneAlreadyRegistered(normalizedPhone)) {

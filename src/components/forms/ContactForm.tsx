@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle2 } from 'lucide-react';
 import { Button } from '../shared/Button';
+import { firstValidationError, validateEmail, validatePhone, validateRequiredText } from '../../lib/validation/forms';
 
 export function ContactForm() {
   const [name, setName] = useState('');
@@ -17,20 +18,15 @@ export function ContactForm() {
     e.preventDefault();
     setError('');
 
-    if (!name.trim()) {
-      setError('Nama lengkap wajib diisi.');
-      return;
-    }
-    if (!email.trim() || !email.includes('@')) {
-      setError('Alamat email tidak valid.');
-      return;
-    }
-    if (!phone.trim()) {
-      setError('Nomor telepon / WhatsApp wajib diisi.');
-      return;
-    }
-    if (!message.trim()) {
-      setError('Pesan tidak boleh kosong.');
+    const validationError = firstValidationError(
+      validateRequiredText(name, 'Nama lengkap wajib diisi.'),
+      validateEmail(email),
+      validatePhone(phone),
+      validateRequiredText(message, 'Pesan tidak boleh kosong.')
+    );
+
+    if (validationError) {
+      setError(validationError);
       return;
     }
 

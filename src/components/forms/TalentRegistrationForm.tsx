@@ -3,6 +3,14 @@ import { Check, ArrowRight, ArrowLeft, Upload, FileCheck, CheckCircle2, ShieldCh
 import { services } from '../../data/services';
 import { locations } from '../../data/locations';
 import { Button } from '../shared/Button';
+import {
+  validateEmail,
+  validateMvpImageUpload,
+  validateMvpUpload,
+  validatePhone,
+  validateRequiredText,
+  validateSelected,
+} from '../../lib/validation/forms';
 
 export function TalentRegistrationForm() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -51,23 +59,53 @@ export function TalentRegistrationForm() {
     setFormData({ ...formData, selectedCoverageAreas: updated });
   };
 
+  const handleFileChange = (field: 'profilePhoto' | 'ktpPhoto' | 'skckPhoto', file: File | null) => {
+    const nextErrors = { ...errors };
+    const label = field === 'profilePhoto' ? 'Foto profil' : field === 'ktpPhoto' ? 'KTP' : 'SKCK';
+    const error = field === 'profilePhoto'
+      ? validateMvpImageUpload(file, label)
+      : validateMvpUpload(file, label);
+
+    if (error) {
+      nextErrors[field] = error;
+    } else {
+      delete nextErrors[field];
+    }
+
+    setErrors(nextErrors);
+    setFormData({ ...formData, [field]: error ? null : file });
+  };
+
   const validateStep = (step: number): boolean => {
     const stepErrors: Record<string, string> = {};
 
     if (step === 1) {
-      if (!formData.fullName.trim()) stepErrors.fullName = 'Nama lengkap wajib diisi.';
-      if (!formData.whatsappNumber.trim() || formData.whatsappNumber.length < 9) stepErrors.whatsappNumber = 'Nomor WhatsApp tidak valid.';
-      if (!formData.emailAddress.includes('@')) stepErrors.emailAddress = 'Alamat email tidak valid.';
-      if (!formData.birthDate) stepErrors.birthDate = 'Tanggal lahir wajib diisi.';
-      if (!formData.fullAddress.trim()) stepErrors.fullAddress = 'Alamat lengkap wajib diisi.';
+      const fullNameError = validateRequiredText(formData.fullName, 'Nama lengkap wajib diisi.');
+      const phoneError = validatePhone(formData.whatsappNumber);
+      const emailError = validateEmail(formData.emailAddress);
+      const birthDateError = validateRequiredText(formData.birthDate, 'Tanggal lahir wajib diisi.');
+      const addressError = validateRequiredText(formData.fullAddress, 'Alamat lengkap wajib diisi.');
+
+      if (fullNameError) stepErrors.fullName = fullNameError;
+      if (phoneError) stepErrors.whatsappNumber = phoneError;
+      if (emailError) stepErrors.emailAddress = emailError;
+      if (birthDateError) stepErrors.birthDate = birthDateError;
+      if (addressError) stepErrors.fullAddress = addressError;
     } else if (step === 2) {
-      if (formData.selectedServices.length === 0) stepErrors.selectedServices = 'Silakan pilih minimal 1 layanan harian.';
+      const selectedServicesError = validateSelected(formData.selectedServices, 'Silakan pilih minimal 1 layanan harian.');
+      if (selectedServicesError) stepErrors.selectedServices = selectedServicesError;
     } else if (step === 3) {
-      if (formData.selectedSchedules.length === 0) stepErrors.selectedSchedules = 'Silakan pilih jadwal hari ketersediaan.';
-      if (formData.selectedCoverageAreas.length === 0) stepErrors.selectedCoverageAreas = 'Silakan pilih area jangkauan tugas.';
+      const selectedSchedulesError = validateSelected(formData.selectedSchedules, 'Silakan pilih jadwal hari ketersediaan.');
+      const selectedCoverageError = validateSelected(formData.selectedCoverageAreas, 'Silakan pilih area jangkauan tugas.');
+      if (selectedSchedulesError) stepErrors.selectedSchedules = selectedSchedulesError;
+      if (selectedCoverageError) stepErrors.selectedCoverageAreas = selectedCoverageError;
     } else if (step === 4) {
-      // For testing, mock upload allows skip but warns
-      // In production we validate file presence
+      const profilePhotoError = validateMvpImageUpload(formData.profilePhoto, 'Foto profil');
+      const ktpPhotoError = validateMvpUpload(formData.ktpPhoto, 'KTP');
+      const skckPhotoError = validateMvpUpload(formData.skckPhoto, 'SKCK');
+      if (profilePhotoError) stepErrors.profilePhoto = profilePhotoError;
+      if (ktpPhotoError) stepErrors.ktpPhoto = ktpPhotoError;
+      if (skckPhotoError) stepErrors.skckPhoto = skckPhotoError;
     }
 
     setErrors(stepErrors);
@@ -425,11 +463,12 @@ export function TalentRegistrationForm() {
               <label className="border-2 border-dashed border-gray-200 hover:border-[#FF6500]/40 p-5 rounded-2xl text-center bg-slate-50/50 flex flex-col items-center justify-center min-h-[160px] cursor-pointer transition-all">
                 <input 
                   type="file" 
-                  accept="image/*" 
+                  accept=".jpg,.jpeg,.png,image/jpeg,image/png" 
                   className="hidden" 
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
-                    setFormData({ ...formData, profilePhoto: file });
+                    handleFileChange('profilePhoto', file);
+                    e.target.value = '';
                   }}
                 />
                 <Upload size={20} className="text-gray-400 mb-2" />
@@ -444,17 +483,19 @@ export function TalentRegistrationForm() {
                     Pilih File Foto
                   </div>
                 )}
+                {errors.profilePhoto && <p className="text-red-500 text-[10px] font-bold mt-2">{errors.profilePhoto}</p>}
               </label>
 
               {/* KTP dropzone */}
               <label className="border-2 border-dashed border-gray-200 hover:border-[#FF6500]/40 p-5 rounded-2xl text-center bg-slate-50/50 flex flex-col items-center justify-center min-h-[160px] cursor-pointer transition-all">
                 <input 
                   type="file" 
-                  accept="image/*,.pdf" 
+                  accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" 
                   className="hidden" 
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
-                    setFormData({ ...formData, ktpPhoto: file });
+                    handleFileChange('ktpPhoto', file);
+                    e.target.value = '';
                   }}
                 />
                 <Upload size={20} className="text-gray-400 mb-2" />
@@ -469,17 +510,19 @@ export function TalentRegistrationForm() {
                     Pilih File KTP
                   </div>
                 )}
+                {errors.ktpPhoto && <p className="text-red-500 text-[10px] font-bold mt-2">{errors.ktpPhoto}</p>}
               </label>
 
               {/* SKCK dropzone */}
               <label className="border-2 border-dashed border-gray-200 hover:border-[#FF6500]/40 p-5 rounded-2xl text-center bg-slate-50/50 flex flex-col items-center justify-center min-h-[160px] cursor-pointer transition-all">
                 <input 
                   type="file" 
-                  accept="image/*,.pdf" 
+                  accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" 
                   className="hidden" 
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
-                    setFormData({ ...formData, skckPhoto: file });
+                    handleFileChange('skckPhoto', file);
+                    e.target.value = '';
                   }}
                 />
                 <Upload size={20} className="text-gray-400 mb-2" />
@@ -494,6 +537,7 @@ export function TalentRegistrationForm() {
                     Sangat Direkomendasikan
                   </div>
                 )}
+                {errors.skckPhoto && <p className="text-red-500 text-[10px] font-bold mt-2">{errors.skckPhoto}</p>}
               </label>
             </div>
           </div>

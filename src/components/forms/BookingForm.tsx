@@ -8,6 +8,7 @@ import { Button } from '../shared/Button';
 import { FallbackImage } from '../shared/FallbackImage';
 import { useTalentCatalog } from '../../hooks/useTalentCatalog';
 import { getTalentAvatarPath } from '../../lib/assetPaths';
+import { firstValidationError, validatePhone, validateRequiredText } from '../../lib/validation/forms';
 
 interface BookingFormProps {
   service: Service;
@@ -77,29 +78,17 @@ export function BookingForm({ service, selectedTalentSlug, onSuccess }: BookingF
     e.preventDefault();
     setFormError('');
 
-    // Validations
-    if (!customerName.trim()) {
-      setFormError('Nama lengkap harus diisi.');
-      return;
-    }
-    if (!customerPhone.trim() || customerPhone.length < 9) {
-      setFormError('Nomor WhatsApp tidak valid (minimal 9 karakter).');
-      return;
-    }
-    if (!bookingDate) {
-      setFormError('Silakan pilih tanggal pelaksanaan.');
-      return;
-    }
-    if (!bookingTime) {
-      setFormError('Silakan tentukan jam mulai.');
-      return;
-    }
-    if (!locationAddress.trim()) {
-      setFormError('Alamat lengkap lokasi pelaksanaan harus diisi.');
-      return;
-    }
-    if (!selectedTalentId) {
-      setFormError('Silakan pilih Talent pendamping.');
+    const validationError = firstValidationError(
+      validateRequiredText(customerName, 'Nama lengkap harus diisi.'),
+      validatePhone(customerPhone),
+      validateRequiredText(bookingDate, 'Silakan pilih tanggal pelaksanaan.'),
+      validateRequiredText(bookingTime, 'Silakan tentukan jam mulai.'),
+      validateRequiredText(locationAddress, 'Alamat lengkap lokasi pelaksanaan harus diisi.'),
+      validateRequiredText(selectedTalentId, 'Silakan pilih Talent pendamping.')
+    );
+
+    if (validationError) {
+      setFormError(validationError);
       return;
     }
 

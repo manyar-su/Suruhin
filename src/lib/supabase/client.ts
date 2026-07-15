@@ -2,8 +2,34 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 let browserClient: SupabaseClient | null | undefined;
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  const [, payload] = token.split('.');
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = atob(normalizedPayload.padEnd(Math.ceil(normalizedPayload.length / 4) * 4, '='));
+    return JSON.parse(decoded) as Record<string, unknown>;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+function assertPublishableSupabaseKey(key: string) {
+  const trimmed = key.trim();
+  const payload = decodeJwtPayload(trimmed);
+  const role = typeof payload?.role === 'string' ? payload.role : null;
+
+  if (trimmed.startsWith('sb_secret_') || role === 'service_role') {
+    throw new Error('Supabase service_role key tidak boleh dipakai di frontend. Gunakan NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+  }
+}
+
 /**
- * Creates a single reusable Supabase browser client when public runtime env is available.
+ * MVP uses a browser anon client only. Supabase Auth can be wired later without exposing service_role.
  */
 export function getSupabaseBrowserClient() {
   if (browserClient !== undefined) {
@@ -17,6 +43,8 @@ export function getSupabaseBrowserClient() {
     browserClient = null;
     return browserClient;
   }
+
+  assertPublishableSupabaseKey(anonKey);
 
   browserClient = createClient(url, anonKey, {
     auth: {
