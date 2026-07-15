@@ -1400,7 +1400,7 @@ export function ProfilTalent({ currentUser, onUpdateUser, onDeleteAccount, navig
       >
         <div className="space-y-4 text-left">
           <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-[11px] leading-relaxed text-red-700">
-            Akun <strong>{currentUser.name}</strong> akan dihapus dari sesi lokal dan kami juga akan mencoba menghapus data MVP di Supabase jika akun ini terdaftar di sana.
+            Akun Anda akan dihapus.
           </div>
           <p className="text-xs font-semibold text-[#172033]/75">
             Ketik <span className="rounded bg-slate-100 px-1.5 py-0.5 font-black text-[#082B5C]">HAPUS</span> untuk melanjutkan.

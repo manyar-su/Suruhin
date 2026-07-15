@@ -15,6 +15,7 @@ const FAILED_WINDOW_MS = 15 * 60 * 1000;
 const LOCK_DURATION_MS = 30 * 60 * 1000;
 const SUBMIT_COOLDOWN_MS = 1200;
 export const TALENT_CATALOG_UPDATED_EVENT = 'suruhin_talents_updated';
+const REMOVED_LEGACY_TALENT_NAMES = new Set(['maris ibrahim', 'maris']);
 
 const DEFAULT_DEMO_CREDENTIAL = {
   phone: '08123456789',
@@ -59,6 +60,13 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function isRemovedLegacyTalent(talent: Pick<Talent, 'id' | 'name' | 'slug'> | null | undefined) {
+  if (!talent) return false;
+  const normalizedName = talent.name.trim().toLowerCase();
+  const normalizedSlug = talent.slug.trim().toLowerCase();
+  return REMOVED_LEGACY_TALENT_NAMES.has(normalizedName) || REMOVED_LEGACY_TALENT_NAMES.has(normalizedSlug);
+}
+
 export function normalizePhone(value: string) {
   return value.replace(/\D/g, '');
 }
@@ -69,7 +77,16 @@ function getStoredTalentOverrides(): Talent[] {
     return [];
   }
 
-  return Array.isArray(parsed) ? parsed : [parsed];
+  const normalized = (Array.isArray(parsed) ? parsed : [parsed]).filter((talent) => !isRemovedLegacyTalent(talent));
+  if (normalized.length !== (Array.isArray(parsed) ? parsed : [parsed]).length) {
+    if (normalized.length === 0) {
+      localStorage.removeItem(CUSTOM_TALENT_KEY);
+    } else {
+      localStorage.setItem(CUSTOM_TALENT_KEY, JSON.stringify(normalized));
+    }
+  }
+
+  return normalized;
 }
 
 function emitTalentCatalogUpdated() {
@@ -181,13 +198,18 @@ function migrateLegacySession(): Talent | null {
 export function getCurrentSessionUser(): Talent | null {
   const session = safeParse<SessionEnvelope>(localStorage.getItem(SESSION_KEY));
   if (session) {
-    if (isSessionExpired(session)) {
+    if (isSessionExpired(session) || isRemovedLegacyTalent(session.user)) {
       clearLegacyArtifacts();
       return null;
     }
     return session.user;
   }
-  return migrateLegacySession();
+  const legacyUser = migrateLegacySession();
+  if (isRemovedLegacyTalent(legacyUser)) {
+    clearLegacyArtifacts();
+    return null;
+  }
+  return legacyUser;
 }
 
 function getStoredCredentials(): StoredCredential[] {
