@@ -96,6 +96,19 @@ select {
       #ffffff;
   }
 
+  .site-parallax-bg {
+    display: none;
+  }
+
+  .scroll-reveal,
+  .scroll-reveal.is-visible {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    filter: none;
+    will-change: auto;
+  }
+
   main :where(.py-24, .py-32) {
     padding-top: 4.75rem !important;
     padding-bottom: 3.25rem !important;

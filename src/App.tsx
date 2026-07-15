@@ -71,7 +71,12 @@ export default function App() {
 
   useEffect(() => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduceMotion) return;
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    if (reduceMotion || isMobile) {
+      document.documentElement.style.setProperty('--parallax-soft', '0px');
+      document.documentElement.style.setProperty('--parallax-deep', '0px');
+      return;
+    }
 
     let animationFrame = 0;
     const handleScroll = () => {
@@ -94,7 +99,8 @@ export default function App() {
 
   useEffect(() => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduceMotion) return;
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    if (reduceMotion || isMobile) return;
 
     const selector = [
       'main section',
