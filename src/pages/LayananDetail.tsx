@@ -120,7 +120,7 @@ export function LayananDetail({ slug, navigate }: LayananDetailProps) {
         {/* Back Link Breadcrumb */}
         <button
           onClick={() => navigate('/layanan')}
-          className="inline-flex items-center gap-1 text-xs font-black text-[#082B5C] hover:text-[#FF6500] mb-8 cursor-pointer group"
+          className="mt-4 inline-flex items-center gap-1 text-xs font-black text-[#082B5C] hover:text-[#FF6500] mb-8 cursor-pointer group sm:mt-0"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
           <span>Kembali ke Katalog Jasa</span>

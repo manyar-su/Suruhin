@@ -20,21 +20,18 @@ export function JoinTalentBanner({ onRegisterAsTalent }: JoinTalentBannerProps) 
   ];
 
   return (
-    <section
-      className="bg-white py-14 md:py-16"
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '760px' }}
-    >
+    <section className="bg-white py-14 md:py-16">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="overflow-hidden rounded-[2.25rem] border border-[#fff2df] bg-[radial-gradient(circle_at_left,_rgba(255,194,86,0.16),_transparent_28%),linear-gradient(135deg,_#fffaf3_0%,_#fff7ee_45%,_#fff_100%)] shadow-[0_22px_60px_rgba(8,43,92,0.08)]">
           <div className="grid items-center gap-8 lg:grid-cols-[0.88fr_1.12fr]">
-            <div className="relative hidden h-full overflow-hidden md:block">
+            <div className="relative h-full overflow-hidden">
               <img
                 src={getStaticAssetPath('ui/layout-reference.webp')}
                 alt="Talent Suruhin"
                 loading="lazy"
                 decoding="async"
                 fetchPriority="low"
-                className="h-full min-h-[320px] w-full object-cover"
+                className="h-full min-h-[220px] w-full object-cover md:min-h-[320px]"
               />
             </div>
 
