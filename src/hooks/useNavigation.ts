@@ -50,6 +50,24 @@ export function parseRoute(urlPath: string): RouteInfo {
   if (path === '/profil-talent') {
     return { path, page: 'profil-talent', queryParams };
   }
+  if (path === '/register') {
+    return { path, page: 'register', queryParams };
+  }
+  if (path === '/register/customer') {
+    return { path, page: 'register-customer', queryParams };
+  }
+  if (path === '/register/talent') {
+    return { path, page: 'register-talent', queryParams };
+  }
+  if (path === '/dashboard/customer') {
+    return { path, page: 'dashboard-customer', queryParams };
+  }
+  if (path === '/dashboard/talent') {
+    return { path, page: 'dashboard-talent', queryParams };
+  }
+  if (path === '/admin') {
+    return { path, page: 'dashboard-admin', queryParams };
+  }
   if (path === '/dashboard/talent/jasa') {
     return { path, page: 'talent-jasa', queryParams };
   }

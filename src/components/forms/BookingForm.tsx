@@ -9,6 +9,7 @@ import { FallbackImage } from '../shared/FallbackImage';
 import { useTalentCatalog } from '../../hooks/useTalentCatalog';
 import { getTalentAvatarPath } from '../../lib/assetPaths';
 import { firstValidationError, validatePhone, validateRequiredText } from '../../lib/validation/forms';
+import { createMvpOrder } from '../../lib/supabase/mvp';
 
 interface BookingFormProps {
   service: Service;
@@ -74,7 +75,7 @@ export function BookingForm({ service, selectedTalentSlug, onSuccess }: BookingF
   const servicePriceTotal = service.price * duration;
   const grandTotal = servicePriceTotal + platformFee;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
 
@@ -94,36 +95,51 @@ export function BookingForm({ service, selectedTalentSlug, onSuccess }: BookingF
 
     setIsSubmitting(true);
 
-    // Simulate order placement
-    setTimeout(() => {
-      const orderId = generateOrderId();
-      const payload = {
-        orderId,
-        customerName: customerName.trim(),
-        customerPhone: customerPhone.trim(),
-        serviceTitle: service.title,
-        talentName: selectedTalent?.name || 'Talent Rekomendasi Suruhin',
-        date: bookingDate,
-        time: bookingTime,
-        duration: `${duration} ${service.slug.includes('antar') ? 'Sesi/Jarak' : 'Jam'}`,
-        location: locationAddress.trim(),
-        notes: additionalNotes.trim(),
-        price: servicePriceTotal,
-        platformFee,
-        total: grandTotal
-      };
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const orderResult = await createMvpOrder({
+      talentId: uuidPattern.test(selectedTalentId) ? selectedTalentId : null,
+      category: service.slug,
+      orderDate: bookingDate,
+      startTime: bookingTime,
+      durationHours: duration,
+      address: locationAddress,
+      notes: additionalNotes,
+      pricePerHour: service.price,
+      totalPrice: grandTotal,
+    });
 
-      const message = generateBookingMessage(payload);
-      const url = generateWhatsAppUrl(message);
-
-      // Open WhatsApp in new tab
-      window.open(url, '_blank', 'noopener,noreferrer');
-      
+    if ('error' in orderResult) {
       setIsSubmitting(false);
-      if (onSuccess) {
-        onSuccess();
-      }
-    }, 1000);
+      setFormError(orderResult.error);
+      return;
+    }
+
+    const orderId = orderResult.data.id || generateOrderId();
+    const payload = {
+      orderId,
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      serviceTitle: service.title,
+      talentName: selectedTalent?.name || 'Talent Rekomendasi Suruhin',
+      date: bookingDate,
+      time: bookingTime,
+      duration: `${duration} ${service.slug.includes('antar') ? 'Sesi/Jarak' : 'Jam'}`,
+      location: locationAddress.trim(),
+      notes: additionalNotes.trim(),
+      price: servicePriceTotal,
+      platformFee,
+      total: grandTotal
+    };
+
+    const message = generateBookingMessage(payload);
+    const url = generateWhatsAppUrl(message);
+
+    window.open(url, '_blank', 'noopener,noreferrer');
+
+    setIsSubmitting(false);
+    if (onSuccess) {
+      onSuccess();
+    }
   };
 
   return (

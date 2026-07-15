@@ -8,11 +8,17 @@ import {
   validateMvpImageUpload,
   validateMvpUpload,
   validatePhone,
+  validatePositiveNumber,
   validateRequiredText,
   validateSelected,
 } from '../../lib/validation/forms';
+import { registerMvpTalent } from '../../lib/supabase/mvp';
 
-export function TalentRegistrationForm() {
+interface TalentRegistrationFormProps {
+  onSuccess?: () => void;
+}
+
+export function TalentRegistrationForm({ onSuccess }: TalentRegistrationFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -27,6 +33,7 @@ export function TalentRegistrationForm() {
     fullAddress: '',
     selectedCity: 'Kota Tasikmalaya',
     selectedServices: [] as string[],
+    pricePerHour: 50000,
     selectedSchedules: [] as string[],
     selectedCoverageAreas: [] as string[],
     experienceText: '',
@@ -93,7 +100,9 @@ export function TalentRegistrationForm() {
       if (addressError) stepErrors.fullAddress = addressError;
     } else if (step === 2) {
       const selectedServicesError = validateSelected(formData.selectedServices, 'Silakan pilih minimal 1 layanan harian.');
+      const priceError = validatePositiveNumber(formData.pricePerHour, 'Harga per jam harus lebih dari 0.');
       if (selectedServicesError) stepErrors.selectedServices = selectedServicesError;
+      if (priceError) stepErrors.pricePerHour = priceError;
     } else if (step === 3) {
       const selectedSchedulesError = validateSelected(formData.selectedSchedules, 'Silakan pilih jadwal hari ketersediaan.');
       const selectedCoverageError = validateSelected(formData.selectedCoverageAreas, 'Silakan pilih area jangkauan tugas.');
@@ -124,7 +133,7 @@ export function TalentRegistrationForm() {
     window.scrollTo(0, 0);
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
     if (!formData.agreeTerms) {
       setErrors({ agreeTerms: 'Anda harus menyetujui syarat dan ketentuan kemitraan.' });
@@ -132,11 +141,30 @@ export function TalentRegistrationForm() {
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setFormSubmitted(true);
-      setIsSubmitting(false);
-      window.scrollTo(0, 0);
-    }, 1500);
+    const result = await registerMvpTalent({
+      fullName: formData.fullName,
+      email: formData.emailAddress,
+      phone: formData.whatsappNumber,
+      address: formData.fullAddress,
+      city: formData.selectedCity,
+      category: formData.selectedServices[0] || 'temenin',
+      bio: formData.bioText,
+      hobby: formData.experienceText,
+      pricePerHour: formData.pricePerHour,
+      profilePhoto: formData.profilePhoto,
+      ktpPhoto: formData.ktpPhoto,
+      skckPhoto: formData.skckPhoto,
+    });
+
+    setIsSubmitting(false);
+    if ('error' in result) {
+      setErrors({ submit: result.error });
+      return;
+    }
+
+    setFormSubmitted(true);
+    onSuccess?.();
+    window.scrollTo(0, 0);
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -337,6 +365,13 @@ export function TalentRegistrationForm() {
               </div>
             )}
 
+            {errors.pricePerHour && (
+              <div className="p-3 bg-red-50 text-[#E5484D] text-xs font-bold rounded-xl flex items-center gap-2">
+                <AlertCircle size={14} />
+                <span>{errors.pricePerHour}</span>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[350px] overflow-y-auto pr-2">
               {services.map((srv) => {
                 const isChecked = formData.selectedServices.includes(srv.slug);
@@ -363,6 +398,20 @@ export function TalentRegistrationForm() {
                   </div>
                 );
               })}
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Harga Jasa per Jam</label>
+              <input
+                type="number"
+                min={10000}
+                step={5000}
+                value={formData.pricePerHour}
+                onChange={(e) => setFormData({ ...formData, pricePerHour: Number(e.target.value) })}
+                className="w-full bg-white border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6500]/15 focus:border-[#FF6500]"
+                placeholder="Contoh: 50000"
+              />
+              <p className="mt-1.5 text-[10px] text-gray-400">Tarif ini dipakai sebagai estimasi awal di dashboard order.</p>
             </div>
           </div>
         )}
@@ -597,6 +646,7 @@ export function TalentRegistrationForm() {
               </label>
             </div>
             {errors.agreeTerms && <p className="text-red-500 text-[10px] font-bold">{errors.agreeTerms}</p>}
+            {errors.submit && <p className="text-red-500 text-[10px] font-bold">{errors.submit}</p>}
           </form>
         )}
       </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Star, CheckCircle, AlertCircle, MessageSquare } from 'lucide-react';
 import { Rating } from '../shared/Rating';
 import { Talent, Service } from '../../types';
+import { submitMvpRating } from '../../lib/supabase/mvp';
 
 interface TalentReviewSystemProps {
   talent: Talent;
@@ -121,7 +122,7 @@ export function TalentReviewSystem({ talent, supportedServices, onRatingUpdated 
     localStorage.setItem(`jastip_talent_reviews_${talent.id}`, JSON.stringify(userReviews));
   }, [userReviews, talent.id]);
 
-  const handleReviewSubmit = (e: React.FormEvent) => {
+  const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formRating) {
@@ -154,6 +155,20 @@ export function TalentReviewSystem({ talent, supportedServices, onRatingUpdated 
       comment: formComment.trim(),
       date: 'Baru Saja',
     };
+
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (uuidPattern.test(talent.id)) {
+      const result = await submitMvpRating({
+        talentId: talent.id,
+        rating: formRating,
+        review: `${formTask} - ${formComment.trim()}`,
+      });
+
+      if ('error' in result) {
+        setFormError(result.error);
+        return;
+      }
+    }
 
     setUserReviews([newReview, ...userReviews]);
     setFormSuccess(true);

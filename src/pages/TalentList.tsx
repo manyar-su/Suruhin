@@ -5,6 +5,8 @@ import { TalentCard } from '../components/talent/TalentCard';
 import { Container } from '../components/layout/Container';
 import { EmptyState } from '../components/shared/EmptyState';
 import { useTalentCatalog } from '../hooks/useTalentCatalog';
+import { listApprovedAvailableMvpTalents } from '../lib/supabase/mvp';
+import { Talent } from '../types';
 
 interface TalentListProps {
   navigate: (path: string) => void;
@@ -13,6 +15,8 @@ interface TalentListProps {
 
 export function TalentList({ navigate, queryParams }: TalentListProps) {
   const talents = useTalentCatalog();
+  const [supabaseTalents, setSupabaseTalents] = useState<Talent[]>([]);
+  const [supabaseError, setSupabaseError] = useState('');
   const [searchQuery, setSearchQuery] = useState(queryParams.search || '');
   const [selectedGender, setSelectedGender] = useState(queryParams.gender || 'all');
   const [selectedLocation, setSelectedLocation] = useState(queryParams.location || 'all');
@@ -84,8 +88,36 @@ export function TalentList({ navigate, queryParams }: TalentListProps) {
     navigate('/talent');
   };
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSupabaseTalents() {
+      const result = await listApprovedAvailableMvpTalents();
+      if (cancelled) return;
+
+      if (result.ok) {
+        setSupabaseTalents(result.data);
+        setSupabaseError('');
+      } else if ('error' in result && !result.error.includes('belum dikonfigurasi')) {
+        setSupabaseError(result.error);
+      }
+    }
+
+    loadSupabaseTalents();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const searchableTalents = useMemo(() => {
+    const localApproved = talents.filter((talent) => talent.verified && talent.available);
+    const existingIds = new Set(localApproved.map((talent) => talent.id));
+    return [...supabaseTalents.filter((talent) => !existingIds.has(talent.id)), ...localApproved];
+  }, [supabaseTalents, talents]);
+
   const filteredTalents = useMemo(() => {
-    const filtered = talents.filter((talent) => {
+    const filtered = searchableTalents.filter((talent) => {
       const genderMatch = selectedGender === 'all' || talent.gender.toLowerCase() === selectedGender.toLowerCase();
       const locationMatch = selectedLocation === 'all' || talent.location === selectedLocation;
       const availabilityMatch = !onlyAvailable || talent.available;
@@ -112,7 +144,7 @@ export function TalentList({ navigate, queryParams }: TalentListProps) {
     }
 
     return sorted;
-  }, [searchQuery, selectedGender, selectedLocation, onlyAvailable, onlyVerified, minRating, sortBy]);
+  }, [searchQuery, selectedGender, selectedLocation, onlyAvailable, onlyVerified, minRating, sortBy, searchableTalents]);
 
   return (
     <div className="py-24 bg-slate-50/50 min-h-screen">
@@ -145,11 +177,11 @@ export function TalentList({ navigate, queryParams }: TalentListProps) {
                 <div className="text-[10px] uppercase tracking-wider text-white/70">Tampil</div>
               </div>
               <div>
-                <div className="text-lg font-black text-[#FF6500]">{talents.filter((talent) => talent.verified).length}</div>
+                <div className="text-lg font-black text-[#FF6500]">{searchableTalents.filter((talent) => talent.verified).length}</div>
                 <div className="text-[10px] uppercase tracking-wider text-white/70">Verified</div>
               </div>
               <div>
-                <div className="text-lg font-black text-[#FF6500]">{talents.filter((talent) => talent.available).length}</div>
+                <div className="text-lg font-black text-[#FF6500]">{searchableTalents.filter((talent) => talent.available).length}</div>
                 <div className="text-[10px] uppercase tracking-wider text-white/70">Siap kerja</div>
               </div>
             </div>
@@ -157,6 +189,11 @@ export function TalentList({ navigate, queryParams }: TalentListProps) {
         </div>
 
         <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm mb-10 space-y-5">
+          {supabaseError && (
+            <div className="rounded-2xl border border-amber-100 bg-amber-50 p-3 text-xs font-bold text-amber-700">
+              Data Supabase belum bisa dimuat: {supabaseError}
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
             <div className="md:col-span-8 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 flex items-center gap-3">
               <Search size={20} className="text-[#082B5C] opacity-40 shrink-0" />

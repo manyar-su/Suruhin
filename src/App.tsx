@@ -24,6 +24,8 @@ import { KebijakanPrivasi } from './pages/KebijakanPrivasi';
 import { SyaratKetentuan } from './pages/SyaratKetentuan';
 import { ProfilTalent } from './pages/ProfilTalent';
 import { PesananTrackingPage } from './pages/PesananTrackingPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { MvpDashboard } from './pages/MvpDashboard';
 
 export default function App() {
   const { currentRoute, navigate } = useNavigation();
@@ -39,7 +41,8 @@ export default function App() {
     []
   );
 
-  const isProtectedRoute = protectedPages.has(currentRoute.page) || currentRoute.path.startsWith('/dashboard/');
+  const mvpOpenPages = new Set(['dashboard-customer', 'dashboard-talent', 'dashboard-admin']);
+  const isProtectedRoute = (protectedPages.has(currentRoute.page) || currentRoute.path.startsWith('/dashboard/')) && !mvpOpenPages.has(currentRoute.page);
 
   useEffect(() => {
     const user = getCurrentSessionUser();
@@ -118,6 +121,18 @@ export default function App() {
         return <TalentList navigate={navigate} queryParams={currentRoute.queryParams} />;
       case 'talent-detail':
         return <TalentDetail slug={currentRoute.slug || ''} navigate={navigate} />;
+      case 'register':
+        return <RegisterPage navigate={navigate} />;
+      case 'register-customer':
+        return <RegisterPage mode="customer" navigate={navigate} />;
+      case 'register-talent':
+        return <RegisterPage mode="talent" navigate={navigate} />;
+      case 'dashboard-customer':
+        return <MvpDashboard role="customer" />;
+      case 'dashboard-talent':
+        return <MvpDashboard role="talent" />;
+      case 'dashboard-admin':
+        return <MvpDashboard role="admin" />;
       case 'profil-talent':
         return (
           <ProfilTalent

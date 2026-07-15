@@ -9,6 +9,8 @@ import { TalentReviewSystem } from '../components/talent/TalentReviewSystem';
 import { useTalentCatalog } from '../hooks/useTalentCatalog';
 import { useServiceCatalog } from '../hooks/useServiceCatalog';
 import { getTalentAvatarPath } from '../lib/assetPaths';
+import { listApprovedAvailableMvpTalents } from '../lib/supabase/mvp';
+import { Talent } from '../types';
 
 interface TalentDetailProps {
   slug: string;
@@ -18,11 +20,38 @@ interface TalentDetailProps {
 export function TalentDetail({ slug, navigate }: TalentDetailProps) {
   const talents = useTalentCatalog();
   const services = useServiceCatalog();
+  const [mvpTalent, setMvpTalent] = useState<Talent | null>(null);
+  const [isLoadingMvpTalent, setIsLoadingMvpTalent] = useState(slug.startsWith('mvp-'));
 
   // Find current talent
   const talent = useMemo(() => {
-    return talents.find((t) => t.slug === slug);
-  }, [slug, talents]);
+    return talents.find((t) => t.slug === slug) || mvpTalent;
+  }, [slug, talents, mvpTalent]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadMvpTalent() {
+      if (!slug.startsWith('mvp-')) {
+        setMvpTalent(null);
+        setIsLoadingMvpTalent(false);
+        return;
+      }
+
+      setIsLoadingMvpTalent(true);
+      const result = await listApprovedAvailableMvpTalents();
+      if (cancelled) return;
+
+      setMvpTalent(result.ok ? result.data.find((item) => item.slug === slug) || null : null);
+      setIsLoadingMvpTalent(false);
+    }
+
+    loadMvpTalent();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
 
   // Find services supported by this talent
   const supportedServices = useMemo(() => {
@@ -48,6 +77,16 @@ export function TalentDetail({ slug, navigate }: TalentDetailProps) {
   // Combined real-time rating states updated by the TalentReviewSystem
   const [averageRating, setAverageRating] = useState(() => talent?.rating || 0);
   const [totalReviewsCount, setTotalReviewsCount] = useState(() => talent?.reviewCount || 0);
+
+  if (isLoadingMvpTalent) {
+    return (
+      <div className="py-32 text-center">
+        <Container>
+          <div className="text-sm font-bold text-[#082B5C]">Memuat profil Talent Supabase...</div>
+        </Container>
+      </div>
+    );
+  }
 
   if (!talent) {
     return (
