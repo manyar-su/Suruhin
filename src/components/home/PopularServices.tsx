@@ -8,8 +8,8 @@ interface PopularServicesProps {
 }
 
 export function PopularServices({ onViewService, onViewAllServices }: PopularServicesProps) {
-  const popularList = services.filter((service) => service.featured).slice(0, 4);
-  const displayList = popularList.length >= 4 ? popularList : services.slice(0, 4);
+  const popularList = services.filter((service) => service.featured).slice(0, 6);
+  const displayList = popularList.length >= 6 ? popularList : services.slice(0, 6);
 
   return (
     <section className="bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fbff_100%)] py-14 md:py-16">
@@ -40,7 +40,7 @@ export function PopularServices({ onViewService, onViewAllServices }: PopularSer
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-2 lg:gap-6">
           {displayList.map((service) => (
             <ServiceCard
               key={service.id}
