@@ -66,7 +66,7 @@ export function ServiceCard({ service, onViewDetail, variant = 'default' }: Serv
               alt={service.title}
               type="service"
               categorySlug={service.category}
-              className="h-full w-full object-contain bg-slate-50 p-1.5 transition duration-500 group-hover:scale-[1.02] sm:object-cover sm:bg-transparent sm:p-0 sm:group-hover:scale-105"
+              className="h-full w-full object-contain bg-slate-50 transition duration-500 group-hover:scale-[1.02]"
             />
 
           <button
